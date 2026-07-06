@@ -1,0 +1,24 @@
+{
+  "name": "fastmoss",
+  "version": "0.1.0",
+  "description": "FastMoss CLI launcher for npm and npx",
+  "license": "UNLICENSED",
+  "private": false,
+  "bin": {
+    "fastmoss": "./bin/fastmoss.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test ./test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "fastmoss": {
+    "downloadBaseURL": "https://github.com/fastmoss/fastmoss-release/releases/download"
+  }
+}
