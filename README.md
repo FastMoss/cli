@@ -1,11 +1,11 @@
-# fastmoss
+# FastMoss CLI
 
 Public release repository for the FastMoss CLI.
 
 This repository is intentionally minimal. It exists to:
 
 - host GitHub Releases for the prebuilt `fastmoss` binaries
-- publish the `fastmoss` npm package
+- publish the `@fastmoss/cli` npm package
 - provide concise install and upgrade documentation for end users
 
 ## Install
@@ -13,13 +13,13 @@ This repository is intentionally minimal. It exists to:
 Run directly with npx:
 
 ```bash
-npx fastmoss
+npx @fastmoss/cli
 ```
 
 Install globally:
 
 ```bash
-npm install -g fastmoss
+npm install -g @fastmoss/cli
 fastmoss
 ```
 
@@ -34,7 +34,7 @@ fastmoss
 Initialize the public repository on GitHub, then connect this local directory:
 
 ```bash
-git remote add origin git@github.com:fastmoss/fastmoss-release.git
+git remote add origin git@github.com:FastMoss/cli.git
 git add .
 git commit -m "chore: initialize public release repo"
 git push -u origin main
@@ -51,4 +51,4 @@ Add the npm publish token in GitHub repository settings:
 2. Re-export this public repository scaffold.
 3. Commit and push the updated `release-assets/` and `fastmoss/` package files here.
 4. Create and push tag `v<version>`.
-5. GitHub Actions will create the GitHub Release and publish `fastmoss` to npm.
+5. GitHub Actions will create the GitHub Release and publish `@fastmoss/cli` to npm.

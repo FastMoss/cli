@@ -3,12 +3,34 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 
 const {
+  DEFAULT_DOWNLOAD_BASE_URL,
   resolvePlatformTarget,
   resolveCacheRoot,
   resolveBinaryPath,
   resolveDownloadBaseURL,
   buildDownloadURL,
+  runCLI,
 } = require("../lib/runtime");
+
+for (const arg of ["--version", "-v", "version"]) {
+  test(`runCLI handles ${arg} without resolving a binary`, async () => {
+    let output = "";
+
+    await runCLI({
+      version: "1.2.3",
+      args: [arg],
+      platform: "unsupported",
+      arch: "unsupported",
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+
+    assert.equal(output, "1.2.3\n");
+  });
+}
 
 test("resolvePlatformTarget maps darwin arm64 to GitHub release asset", () => {
   assert.deepEqual(
@@ -77,6 +99,13 @@ test("resolveDownloadBaseURL prefers configured package value", () => {
       configuredDownloadBaseURL: "https://github.com/example/public-release/releases/download/",
     }),
     "https://github.com/example/public-release/releases/download",
+  );
+});
+
+test("resolveDownloadBaseURL defaults to FastMoss public GitHub release repo", () => {
+  assert.equal(
+    DEFAULT_DOWNLOAD_BASE_URL,
+    "https://github.com/FastMoss/cli/releases/download",
   );
 });
 

@@ -1,5 +1,5 @@
 {
-  "name": "fastmoss",
+  "name": "@fastmoss/cli",
   "version": "0.1.0",
   "description": "FastMoss CLI launcher for npm and npx",
   "license": "UNLICENSED",
@@ -19,6 +19,6 @@
     "node": ">=18"
   },
   "fastmoss": {
-    "downloadBaseURL": "https://github.com/fastmoss/fastmoss-release/releases/download"
+    "downloadBaseURL": "https://github.com/FastMoss/cli/releases/download"
   }
 }

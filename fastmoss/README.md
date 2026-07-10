@@ -1,4 +1,4 @@
-# fastmoss
+# @fastmoss/cli
 
 FastMoss CLI launcher for npm and npx.
 
@@ -9,13 +9,13 @@ This package does not bundle the Go binary itself. On first run it downloads the
 Run without installing:
 
 ```bash
-npx fastmoss
+npx @fastmoss/cli
 ```
 
 Install globally:
 
 ```bash
-npm install -g fastmoss
+npm install -g @fastmoss/cli
 fastmoss
 ```
 
@@ -46,7 +46,7 @@ The downloaded binary is cached here by default:
 You can override the cache directory:
 
 ```bash
-FASTMOSS_CACHE_DIR=/custom/cache/dir npx fastmoss
+FASTMOSS_CACHE_DIR=/custom/cache/dir npx @fastmoss/cli
 ```
 
 ## Download Source
@@ -56,7 +56,7 @@ By default the wrapper downloads binaries from the public GitHub release reposit
 For internal debugging or private release mirrors, you can override the base URL:
 
 ```bash
-FASTMOSS_DOWNLOAD_BASE_URL=https://downloads.example.com/releases npx fastmoss
+FASTMOSS_DOWNLOAD_BASE_URL=https://downloads.example.com/releases npx @fastmoss/cli
 ```
 
 The wrapper will request one of these asset names depending on platform:

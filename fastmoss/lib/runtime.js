@@ -7,7 +7,7 @@ const { pipeline } = require("node:stream/promises");
 const { spawn } = require("node:child_process");
 
 const DEFAULT_DOWNLOAD_BASE_URL =
-  "https://github.com/fastmoss/fastmoss-release/releases/download";
+  "https://github.com/FastMoss/cli/releases/download";
 
 const PLATFORM_TARGETS = {
   "darwin:x64": {
@@ -224,6 +224,14 @@ async function runCLI({
   stderr = process.stderr,
   configuredDownloadBaseURL = "",
 } = {}) {
+  if (
+    args.length === 1 &&
+    ["--version", "-v", "version"].includes(args[0])
+  ) {
+    stdout.write(`${version}\n`);
+    return;
+  }
+
   const { binaryPath, downloaded, downloadURL } = await ensureBinary({
     version,
     env,
