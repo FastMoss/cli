@@ -1,9 +1,15 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const http = require("node:http");
+const os = require("node:os");
 const path = require("node:path");
 
+const packageJSON = require("../package.json");
 const {
   DEFAULT_DOWNLOAD_BASE_URL,
+  ensureBinary,
+  installCLI,
   resolvePlatformTarget,
   resolveCacheRoot,
   resolveBinaryPath,
@@ -133,4 +139,70 @@ test("buildDownloadURL honors override base url", () => {
     }),
     "https://downloads.example.com/releases/v1.2.3/fastmoss-linux-amd64",
   );
+});
+
+test("ensureBinary notifies before downloading a missing binary", async () => {
+  const tempDir = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "fastmoss-ensure-"),
+  );
+  const events = [];
+  let resolveRequest;
+  const requestReceived = new Promise((resolve) => {
+    resolveRequest = resolve;
+  });
+  const server = http.createServer((request, response) => {
+    events.push("request");
+    resolveRequest();
+    response.writeHead(200, { "Content-Type": "application/octet-stream" });
+    response.end("#!/bin/sh\nexit 0\n");
+  });
+
+  try {
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address();
+
+    await ensureBinary({
+      version: "1.2.3",
+      env: {},
+      platform: "linux",
+      arch: "x64",
+      homeDir: tempDir,
+      configuredDownloadBaseURL: `http://127.0.0.1:${port}`,
+      onDownloadStart(downloadURL) {
+        events.push(`start:${downloadURL}`);
+      },
+    });
+    await requestReceived;
+
+    assert.deepEqual(events, [
+      `start:http://127.0.0.1:${port}/v1.2.3/fastmoss-linux-amd64`,
+      "request",
+    ]);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("installCLI skips predownload when FASTMOSS_SKIP_DOWNLOAD is set", async () => {
+  let stderrOutput = "";
+
+  const result = await installCLI({
+    version: "1.2.3",
+    env: { FASTMOSS_SKIP_DOWNLOAD: "1" },
+    platform: "unsupported",
+    arch: "unsupported",
+    stderr: {
+      write(chunk) {
+        stderrOutput += chunk;
+      },
+    },
+  });
+
+  assert.deepEqual(result, { skipped: true });
+  assert.match(stderrOutput, /Skipping fastmoss binary download/);
+});
+
+test("package runs postinstall predownload script", () => {
+  assert.equal(packageJSON.scripts.postinstall, "node ./bin/postinstall.js");
 });

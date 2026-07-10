@@ -1,5 +1,7 @@
 # FastMoss CLI
 
+[中文文档](./README.zh-CN.md)
+
 Public release repository for the FastMoss CLI.
 
 This repository is intentionally minimal. It exists to:

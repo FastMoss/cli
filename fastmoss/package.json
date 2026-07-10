@@ -1,11 +1,11 @@
 {
   "name": "@fastmoss/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "FastMoss CLI launcher for npm and npx",
   "license": "UNLICENSED",
   "private": false,
   "bin": {
-    "fastmoss": "./bin/fastmoss.js"
+    "fastmoss": "bin/fastmoss.js"
   },
   "files": [
     "bin",
@@ -13,6 +13,7 @@
     "README.md"
   ],
   "scripts": {
+    "postinstall": "node ./bin/postinstall.js",
     "test": "node --test ./test/*.test.js"
   },
   "engines": {

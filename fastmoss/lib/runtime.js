@@ -104,6 +104,8 @@ async function ensureBinary({
   arch = process.arch,
   homeDir = os.homedir(),
   configuredDownloadBaseURL = "",
+  onDownloadStart = () => {},
+  downloadFileFn = downloadFile,
 }) {
   const target = resolvePlatformTarget({ platform, arch });
   const cacheRoot = resolveCacheRoot({ env, homeDir });
@@ -122,7 +124,8 @@ async function ensureBinary({
   });
   const tempPath = `${binaryPath}.download`;
 
-  await downloadFile(downloadURL, tempPath);
+  onDownloadStart(downloadURL);
+  await downloadFileFn(downloadURL, tempPath);
 
   if (platform !== "win32") {
     await fs.promises.chmod(tempPath, 0o755);
@@ -130,6 +133,40 @@ async function ensureBinary({
 
   await fs.promises.rename(tempPath, binaryPath);
   return { binaryPath, downloaded: true, downloadURL };
+}
+
+function shouldSkipDownload(env = process.env) {
+  const value = String(env.FASTMOSS_SKIP_DOWNLOAD || "").trim().toLowerCase();
+  return value !== "" && value !== "0" && value !== "false";
+}
+
+async function installCLI({
+  version,
+  env = process.env,
+  platform = process.platform,
+  arch = process.arch,
+  homeDir = os.homedir(),
+  stderr = process.stderr,
+  configuredDownloadBaseURL = "",
+} = {}) {
+  if (shouldSkipDownload(env)) {
+    stderr.write(
+      "Skipping fastmoss binary download because FASTMOSS_SKIP_DOWNLOAD is set.\n",
+    );
+    return { skipped: true };
+  }
+
+  return ensureBinary({
+    version,
+    env,
+    platform,
+    arch,
+    homeDir,
+    configuredDownloadBaseURL,
+    onDownloadStart(downloadURL) {
+      stderr.write(`Downloading fastmoss ${version} from ${downloadURL}\n`);
+    },
+  });
 }
 
 async function fileExists(filePath) {
@@ -239,10 +276,13 @@ async function runCLI({
     arch,
     homeDir,
     configuredDownloadBaseURL,
+    onDownloadStart(downloadURL) {
+      stderr.write(`Downloading fastmoss ${version} from ${downloadURL}\n`);
+    },
   });
 
   if (downloaded) {
-    stderr.write(`Downloading fastmoss ${version} from ${downloadURL}\n`);
+    stderr.write(`Downloaded fastmoss ${version} to ${binaryPath}\n`);
   }
 
   await new Promise((resolve, reject) => {
@@ -266,6 +306,7 @@ module.exports = {
   DEFAULT_DOWNLOAD_BASE_URL,
   buildDownloadURL,
   ensureBinary,
+  installCLI,
   resolveBinaryPath,
   resolveCacheRoot,
   resolveDownloadBaseURL,
