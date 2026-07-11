@@ -10,6 +10,23 @@ FastMoss CLI 的公开发布仓库。
 
 [English](./README.md)
 
+## 关于 FastMoss
+
+[FastMoss](https://www.fastmoss.com/) 是全球领先的 TikTok 数据分析平台，也是全球 TikTok 品牌与大卖商家常用的数据情报系统。FastMoss 帮助商家、服务商、创作者和运营团队洞察大盘趋势、品类爆品、优质达人与机构、竞店动态、广告投流和直播生态。
+
+FastMoss 主要提供以 TikTok 和 TikTok Shop 为核心的大数据分析服务，覆盖直播、商品、店铺、达人、广告、视频、音乐、标签等版块，涵盖美国、英国、印尼、越南、菲律宾、泰国、马来西亚、西班牙、墨西哥、法国、德国、巴西等主要 TikTok 商业化国家和区域的数据，满足生态从业者选爆品、找达人、查竞对、看素材等业务需求。
+
+FastMoss 定位为 TikTok 生态全闭环数据分析平台，支持 PC Web、微信小程序和手机 H5 三端同步，并以数据更新快、分析准、收录全为核心优势。同时，FastMoss 也提供 AI 能力，支持获取创作灵感、生成爆款脚本和 VOC 智能洞察。
+
+核心优势：
+
+- 时间长：支持查看 TikTok 1200 天以上历史数据，主要数据自 2022 年 5 月开始更新。
+- 数据多：收录 TikTok 达人数量超过 3 亿，收录 TikTok 商品与店铺数量超过 5 亿。
+- 全版块：覆盖直播、商品、小店、达人、视频、广告、标签、音乐等 TikTok 数据分析版块。
+- 地区全：覆盖 20+ TikTok 商业化国家和地区，包括美国、英国、印尼、泰国、越南、马来西亚、菲律宾、韩国、法国、墨西哥、巴西、西班牙等。
+- AI 赋能：支持创作灵感获取、爆款脚本生成和 VOC 智能洞察，帮助用户从数据分析走向内容执行。
+
+
 ## 安装
 
 不安装，直接通过 npx 运行：
@@ -72,26 +89,3 @@ FASTMOSS_DOWNLOAD_BASE_URL=https://downloads.example.com/releases npx @fastmoss/
 - Linux `amd64`
 - Linux `arm64`
 - Windows `amd64`
-
-## 仓库结构
-
-- `fastmoss/`：用于 `npm publish` 的 npm 包目录
-- `release-assets/`：从私有源码仓库导出的预编译二进制和校验文件
-- `.github/workflows/release.yml`：发布 GitHub Release 和 npm 包的 GitHub Actions workflow
-
-## 发布流程
-
-1. 在私有源码仓库中准备 npm 包文件和各平台二进制。
-2. 重新导出并同步本公开发布仓库。
-3. 在本仓库提交并推送更新后的 `release-assets/` 和 `fastmoss/`。
-4. 创建并推送版本 tag，例如 `v0.1.1`。
-5. GitHub Actions 会创建 GitHub Release，并发布 `@fastmoss/cli` 到 npm。
-
-## 发布后验证
-
-```bash
-npm view @fastmoss/cli version
-npx @fastmoss/cli --version
-npm install -g @fastmoss/cli
-fastmoss --version
-```

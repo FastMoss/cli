@@ -2,9 +2,9 @@
 
 FastMoss CLI launcher for npm and npx.
 
-This package does not bundle the Go binary itself. On first run it downloads the matching `fastmoss` binary from GitHub Releases, stores it in a local cache directory, and then forwards all CLI arguments to that binary.
+This package installs the `fastmoss` command. It does not bundle the Go binary itself. Instead, it downloads the matching `fastmoss` binary from GitHub Releases, stores it in a local cache directory, and then forwards all CLI arguments to that binary.
 
-During `npm install`, the package tries to predownload the matching binary for the current platform. If the download fails, installation still completes and the wrapper will retry the download on first run.
+During `npm install`, the package tries to predownload the matching binary for the current platform. If the download fails, installation still completes and the wrapper will retry the download on first run with a visible download message.
 
 If your npm configuration blocks lifecycle scripts, allow this package's postinstall script to predownload during install:
 
@@ -27,12 +27,50 @@ npm install -g @fastmoss/cli
 fastmoss
 ```
 
+After global installation, the command name is `fastmoss`. If your shell prints `command not found: fastmoss`, make sure your npm global bin directory is in `PATH`.
+
 Common examples:
 
 ```bash
 fastmoss tools
 fastmoss call --tool creator_search --args '{"keywords":"beauty","region":"US","page":1,"pagesize":10}'
 fastmoss stdio
+```
+
+## Binary Download
+
+The package downloads the current platform's binary from the public GitHub release repository configured in `package.json`.
+
+If install-time download is blocked or fails, the first `fastmoss` run will download the binary again. You should see output similar to:
+
+```text
+Downloading fastmoss 0.1.1 from https://github.com/FastMoss/cli/releases/download/...
+```
+
+You can skip the install-time download and let the first run download the binary:
+
+```bash
+FASTMOSS_SKIP_DOWNLOAD=1 npm install -g @fastmoss/cli
+```
+
+For internal debugging or private release mirrors, override the base URL:
+
+```bash
+FASTMOSS_DOWNLOAD_BASE_URL=https://downloads.example.com/releases npx @fastmoss/cli
+```
+
+## Cache Directory
+
+The downloaded binary is cached here by default:
+
+```text
+~/.fastmoss/bin/<version>/<platform>/
+```
+
+Override the cache directory:
+
+```bash
+FASTMOSS_CACHE_DIR=/custom/cache/dir npx @fastmoss/cli
 ```
 
 ## Supported Platforms
@@ -43,36 +81,6 @@ fastmoss stdio
 - Linux `arm64`
 - Windows `amd64`
 
-## Cache Directory
-
-The downloaded binary is cached here by default:
-
-```text
-~/.fastmoss/bin/<version>/<platform>/
-```
-
-You can override the cache directory:
-
-```bash
-FASTMOSS_CACHE_DIR=/custom/cache/dir npx @fastmoss/cli
-```
-
-You can skip the install-time download:
-
-```bash
-FASTMOSS_SKIP_DOWNLOAD=1 npm install -g @fastmoss/cli
-```
-
-## Download Source
-
-By default the wrapper downloads binaries from the public GitHub release repository configured in `package.json`.
-
-For internal debugging or private release mirrors, you can override the base URL:
-
-```bash
-FASTMOSS_DOWNLOAD_BASE_URL=https://downloads.example.com/releases npx @fastmoss/cli
-```
-
 The wrapper will request one of these asset names depending on platform:
 
 - `fastmoss-darwin-amd64`
@@ -80,7 +88,3 @@ The wrapper will request one of these asset names depending on platform:
 - `fastmoss-linux-amd64`
 - `fastmoss-linux-arm64`
 - `fastmoss-windows-amd64.exe`
-
-## Release Workflow
-
-The private source repository prepares this package and the matching binaries. The public GitHub release repository then publishes the package and hosts the release assets.
