@@ -1,6 +1,6 @@
 {
   "name": "@fastmoss/cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "FastMoss CLI launcher for npm and npx",
   "license": "UNLICENSED",
   "private": false,
@@ -10,7 +10,8 @@
   "files": [
     "bin",
     "lib",
-    "README.md"
+    "README.md",
+    "README.zh-CN.md"
   ],
   "scripts": {
     "postinstall": "node ./bin/postinstall.js",
