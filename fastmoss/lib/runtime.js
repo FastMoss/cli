@@ -8,6 +8,19 @@ const { spawn } = require("node:child_process");
 
 const DEFAULT_DOWNLOAD_BASE_URL =
   "https://github.com/FastMoss/cli/releases/download";
+const SKILL_NAME = "fastmoss-cli";
+const INSTALL_SKILL_USAGE = `Usage: fastmoss-install-skill [--agent codex|claude|agents|all]
+
+Options:
+  -a, --agent <agent>   Install for a specific agent client.
+                         Supported: codex, claude, agents, all.
+  -h, --help            Show this help message.
+
+Environment:
+  FASTMOSS_SKILL_AGENT          Default agent for this command.
+  FASTMOSS_SKILL_DIR            Override the target skills directory.
+  FASTMOSS_SKIP_SKILL_INSTALL   Skip skill installation.
+`;
 
 const PLATFORM_TARGETS = {
   "darwin:x64": {
@@ -140,6 +153,156 @@ function shouldSkipDownload(env = process.env) {
   return value !== "" && value !== "0" && value !== "false";
 }
 
+function isTruthyEnv(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized !== "" && normalized !== "0" && normalized !== "false";
+}
+
+function shouldSkipSkillInstall(env = process.env) {
+  return isTruthyEnv(env.FASTMOSS_SKIP_SKILL_INSTALL);
+}
+
+function normalizeSkillAgent(agent = "") {
+  const normalized = String(agent || "").trim().toLowerCase();
+  if (normalized === "" || normalized === "auto") {
+    return "auto";
+  }
+  if (normalized === "claude-code") {
+    return "claude";
+  }
+  if (normalized === "agent") {
+    return "agents";
+  }
+  return normalized;
+}
+
+function knownSkillTargets({ env = process.env, homeDir = os.homedir() } = {}) {
+  return {
+    codex: path.join(env.CODEX_HOME || path.join(homeDir, ".codex"), "skills"),
+    claude: path.join(
+      env.CLAUDE_HOME || path.join(homeDir, ".claude"),
+      "skills",
+    ),
+    agents: path.join(
+      env.AGENTS_HOME || path.join(homeDir, ".agents"),
+      "skills",
+    ),
+  };
+}
+
+function resolveSkillInstallTargets({
+  agent = "auto",
+  env = process.env,
+  homeDir = os.homedir(),
+} = {}) {
+  const override = String(env.FASTMOSS_SKILL_DIR || "").trim();
+  if (override !== "") {
+    return [override];
+  }
+
+  const targets = knownSkillTargets({ env, homeDir });
+  const normalizedAgent = normalizeSkillAgent(agent || env.FASTMOSS_SKILL_AGENT);
+
+  if (normalizedAgent === "all") {
+    return [targets.codex, targets.claude, targets.agents];
+  }
+  if (normalizedAgent === "auto") {
+    return Object.values(targets);
+  }
+  if (targets[normalizedAgent]) {
+    return [targets[normalizedAgent]];
+  }
+
+  throw new Error(
+    `Unsupported FastMoss skill agent: ${agent}. Supported agents: codex, claude, agents, all`,
+  );
+}
+
+function parseInstallSkillArgs(args = []) {
+  const result = {
+    agent: "",
+    help: false,
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--help" || arg === "-h") {
+      result.help = true;
+      continue;
+    }
+    if (arg === "--agent" || arg === "-a") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("-")) {
+        throw new Error(`${arg} requires an agent value`);
+      }
+      result.agent = value;
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown option: ${arg}`);
+  }
+
+  return result;
+}
+
+async function installSkill({
+  packageRoot = path.join(__dirname, ".."),
+  agent = "",
+  env = process.env,
+  homeDir = os.homedir(),
+  stderr = process.stderr,
+} = {}) {
+  if (shouldSkipSkillInstall(env)) {
+    stderr.write(
+      "Skipping FastMoss CLI skill installation because FASTMOSS_SKIP_SKILL_INSTALL is set.\n",
+    );
+    return { installed: [], skipped: true };
+  }
+
+  const sourceSkillDir = path.join(packageRoot, "skills", SKILL_NAME);
+  if (!(await directoryExists(sourceSkillDir))) {
+    throw new Error(`FastMoss CLI skill not found: ${sourceSkillDir}`);
+  }
+
+  let targetRoots = resolveSkillInstallTargets({
+    agent: agent || env.FASTMOSS_SKILL_AGENT || "auto",
+    env,
+    homeDir,
+  });
+
+  const isAuto =
+    String(env.FASTMOSS_SKILL_DIR || "").trim() === "" &&
+    normalizeSkillAgent(agent || env.FASTMOSS_SKILL_AGENT) === "auto";
+  if (isAuto) {
+    const existingRoots = [];
+    for (const targetRoot of targetRoots) {
+      if (await directoryExists(targetRoot)) {
+        existingRoots.push(targetRoot);
+      }
+    }
+    targetRoots = existingRoots;
+  }
+
+  if (targetRoots.length === 0) {
+    stderr.write(
+      "Skipping FastMoss CLI skill installation because no supported agent skill directory was found. Set FASTMOSS_SKILL_AGENT=codex or FASTMOSS_SKILL_DIR to install explicitly.\n",
+    );
+    return { installed: [], skipped: true };
+  }
+
+  const installed = [];
+  for (const targetRoot of targetRoots) {
+    const targetSkillDir = path.join(targetRoot, SKILL_NAME);
+    await fs.promises.mkdir(targetRoot, { recursive: true });
+    await fs.promises.rm(targetSkillDir, { recursive: true, force: true });
+    await fs.promises.cp(sourceSkillDir, targetSkillDir, { recursive: true });
+    installed.push(targetSkillDir);
+    stderr.write(`Installed FastMoss CLI skill to ${targetSkillDir}\n`);
+  }
+
+  return { installed, skipped: false };
+}
+
 async function installCLI({
   version,
   env = process.env,
@@ -173,6 +336,18 @@ async function fileExists(filePath) {
   try {
     const stat = await fs.promises.stat(filePath);
     return stat.isFile() && stat.size > 0;
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function directoryExists(directoryPath) {
+  try {
+    const stat = await fs.promises.stat(directoryPath);
+    return stat.isDirectory();
   } catch (error) {
     if (error && error.code === "ENOENT") {
       return false;
@@ -304,12 +479,16 @@ async function runCLI({
 
 module.exports = {
   DEFAULT_DOWNLOAD_BASE_URL,
+  INSTALL_SKILL_USAGE,
   buildDownloadURL,
   ensureBinary,
+  installSkill,
   installCLI,
+  parseInstallSkillArgs,
   resolveBinaryPath,
   resolveCacheRoot,
   resolveDownloadBaseURL,
+  resolveSkillInstallTargets,
   resolvePlatformTarget,
   runCLI,
 };

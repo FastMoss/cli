@@ -1,15 +1,17 @@
 {
   "name": "@fastmoss/cli",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "FastMoss CLI launcher for npm and npx",
   "license": "UNLICENSED",
   "private": false,
   "bin": {
-    "fastmoss": "bin/fastmoss.js"
+    "fastmoss": "bin/fastmoss.js",
+    "fastmoss-install-skill": "bin/install-skill.js"
   },
   "files": [
     "bin",
     "lib",
+    "skills",
     "README.md",
     "README.zh-CN.md"
   ],

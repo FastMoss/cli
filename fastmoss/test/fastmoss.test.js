@@ -4,12 +4,16 @@ const fs = require("node:fs");
 const http = require("node:http");
 const os = require("node:os");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 
 const packageJSON = require("../package.json");
 const {
   DEFAULT_DOWNLOAD_BASE_URL,
+  installSkill,
   ensureBinary,
   installCLI,
+  parseInstallSkillArgs,
+  resolveSkillInstallTargets,
   resolvePlatformTarget,
   resolveCacheRoot,
   resolveBinaryPath,
@@ -203,6 +207,118 @@ test("installCLI skips predownload when FASTMOSS_SKIP_DOWNLOAD is set", async ()
   assert.match(stderrOutput, /Skipping fastmoss binary download/);
 });
 
+test("resolveSkillInstallTargets supports agent-specific skill directories", () => {
+  assert.deepEqual(
+    resolveSkillInstallTargets({
+      agent: "codex",
+      env: {},
+      homeDir: "/Users/demo",
+    }),
+    [path.join("/Users/demo", ".codex", "skills")],
+  );
+
+  assert.deepEqual(
+    resolveSkillInstallTargets({
+      agent: "claude",
+      env: {},
+      homeDir: "/Users/demo",
+    }),
+    [path.join("/Users/demo", ".claude", "skills")],
+  );
+});
+
+test("parseInstallSkillArgs accepts an agent option", () => {
+  assert.deepEqual(parseInstallSkillArgs(["--agent", "codex"]), {
+    agent: "codex",
+    help: false,
+  });
+
+  assert.deepEqual(parseInstallSkillArgs(["-a", "claude"]), {
+    agent: "claude",
+    help: false,
+  });
+});
+
+test("installSkill copies the bundled skill to an explicit skill directory", async () => {
+  const tempDir = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "fastmoss-skill-"),
+  );
+  const packageRoot = path.join(tempDir, "package");
+  const skillRoot = path.join(tempDir, "agent-skills");
+  const sourceSkill = path.join(packageRoot, "skills", "fastmoss-cli");
+
+  try {
+    await fs.promises.mkdir(path.join(sourceSkill, "references"), {
+      recursive: true,
+    });
+    await fs.promises.writeFile(
+      path.join(sourceSkill, "SKILL.md"),
+      "# FastMoss CLI\n",
+    );
+    await fs.promises.writeFile(
+      path.join(sourceSkill, "references", "tool-call.md"),
+      "# Tool Call\n",
+    );
+
+    const result = await installSkill({
+      packageRoot,
+      env: { FASTMOSS_SKILL_DIR: skillRoot },
+      homeDir: tempDir,
+    });
+
+    assert.deepEqual(result, {
+      installed: [path.join(skillRoot, "fastmoss-cli")],
+      skipped: false,
+    });
+    assert.equal(
+      await fs.promises.readFile(
+        path.join(skillRoot, "fastmoss-cli", "SKILL.md"),
+        "utf8",
+      ),
+      "# FastMoss CLI\n",
+    );
+    assert.equal(
+      await fs.promises.readFile(
+        path.join(skillRoot, "fastmoss-cli", "references", "tool-call.md"),
+        "utf8",
+      ),
+      "# Tool Call\n",
+    );
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
+});
+
 test("package runs postinstall predownload script", () => {
   assert.equal(packageJSON.scripts.postinstall, "node ./bin/postinstall.js");
+});
+
+test("package exposes a standalone skill install command", () => {
+  assert.equal(packageJSON.bin["fastmoss-install-skill"], "bin/install-skill.js");
+});
+
+test("postinstall does not install the bundled skill automatically", async () => {
+  const tempDir = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "fastmoss-postinstall-"),
+  );
+
+  try {
+    const result = spawnSync(process.execPath, ["bin/postinstall.js"], {
+      cwd: path.join(__dirname, ".."),
+      env: {
+        ...process.env,
+        FASTMOSS_SKIP_DOWNLOAD: "1",
+        FASTMOSS_SKILL_DIR: path.join(tempDir, "skills"),
+      },
+      encoding: "utf8",
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      fs.existsSync(path.join(tempDir, "skills", "fastmoss-cli", "SKILL.md")),
+      false,
+    );
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
 });

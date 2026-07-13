@@ -7,13 +7,21 @@ FastMoss CLI lets terminals and AI agents discover and call FastMoss MCP tools f
 Use the CLI together with the FastMoss CLI Agent Skill:
 
 - `@fastmoss/cli` installs the `fastmoss` command and executes tool calls.
-- `npx skills add FastMoss/cli -y -g` installs the Agent Skill so your agent knows which FastMoss tools exist, when to use them, and how to call them.
+- `npx skills add FastMoss/cli` installs the Agent Skill so your agent knows which FastMoss tools exist, when to use them, and how to call them.
 
-For agent workflows, install both:
+Install CLI:
 
 ```bash
 npm install -g @fastmoss/cli
+```
+
+Install Skill separately:
+
+```bash
 npx skills add FastMoss/cli -y -g
+npx skills add FastMoss/cli --agent claude-code
+# If your skills CLI supports --client:
+npx skills add FastMoss/cli --client claude
 ```
 
 ## About FastMoss
