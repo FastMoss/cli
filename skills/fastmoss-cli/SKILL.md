@@ -15,6 +15,14 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    fastmoss --version
    ```
 
+   If the FastMoss CLI is not installed or the command is not found, install it first:
+
+   ```bash
+   npm install -g @fastmoss/cli
+   ```
+
+   Then continue to the login check.
+
 2. Check login status:
 
    ```bash
@@ -31,11 +39,19 @@ Use the `fastmoss` command to discover and call FastMoss tools.
 
 1. Read `references/tool-call.md` before invoking a tool.
 2. Read `references/tools.md` to choose the tool and understand its parameters.
-3. Call tools with JSON arguments:
+3. Every `fastmoss call` MUST include agent client metadata. Prefer environment variables when making one or more calls in the same shell session:
 
    ```bash
-   fastmoss call --tool <tool_name> --args '<json>' --output mcp
+   FASTMOSS_CLIENT_NAME="Codex" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool <tool_name> --args '<json>' --output mcp
    ```
+
+   Or pass explicit flags for a single call:
+
+   ```bash
+   fastmoss call --client-name "Codex" --client-version "<client-version>" --tool <tool_name> --args '<json>' --output mcp
+   ```
+
+   Use the actual client name and version when available. Do not invent a version number; if the runtime does not expose a version, use the client name and omit the version only if the CLI allows it.
 
 Prefer `--output mcp` when an LLM or agent will read and reason over the tool response. Use `--output data` when the user needs a concise end-user payload. Use `--output rpc` only when debugging raw RPC responses.
 
