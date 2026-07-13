@@ -21,6 +21,12 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    npm install -g @fastmoss/cli
    ```
 
+   To update an existing FastMoss CLI installation to the latest package version, run:
+
+   ```bash
+   npm install -g @fastmoss/cli@latest
+   ```
+
    Then continue to the login check.
 
 2. Check login status:
@@ -42,13 +48,13 @@ Use the `fastmoss` command to discover and call FastMoss tools.
 3. Every `fastmoss call` MUST include agent client metadata. Prefer environment variables when making one or more calls in the same shell session:
 
    ```bash
-   FASTMOSS_CLIENT_NAME="Codex" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool <tool_name> --args '<json>' --output mcp
+   FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool <tool_name> --args '<json>' --output mcp
    ```
 
    Or pass explicit flags for a single call:
 
    ```bash
-   fastmoss call --client-name "Codex" --client-version "<client-version>" --tool <tool_name> --args '<json>' --output mcp
+   fastmoss call --client-name "<client-name>" --client-version "<client-version>" --tool <tool_name> --args '<json>' --output mcp
    ```
 
    Use the actual client name and version when available. Do not invent a version number; if the runtime does not expose a version, use the client name and omit the version only if the CLI allows it.

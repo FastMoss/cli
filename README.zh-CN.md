@@ -16,14 +16,6 @@ npm install -g @fastmoss/cli
 npx skills add FastMoss/cli -y -g
 ```
 
-## 仓库内容
-
-这个公开仓库用于发布 FastMoss CLI：
-
-- `fastmoss/`：GitHub Actions 发布 `@fastmoss/cli` 时使用的 npm 包目录。
-- `skills/fastmoss-cli/`：可通过 `npx skills add FastMoss/cli -y -g` 安装的 Agent Skill。
-- `release-assets/`：预编译的 `fastmoss` 二进制文件和 `SHA256SUMS`。
-- `.github/workflows/release.yml`：GitHub Release 和 npm 发布 workflow。
 
 ## 关于 FastMoss
 
@@ -44,6 +36,19 @@ npx @fastmoss/cli
 ```bash
 npm install -g @fastmoss/cli
 fastmoss
+```
+
+更新已有的全局安装：
+
+```bash
+npm install -g @fastmoss/cli@latest
+fastmoss --version
+```
+
+更新 FastMoss CLI Agent Skill：
+
+```bash
+npx skills add FastMoss/cli -y -g
 ```
 
 全局安装后，命令名是 `fastmoss`。如果终端提示 `command not found: fastmoss`，通常是 npm 全局 bin 目录没有加入 `PATH`。
@@ -175,6 +180,14 @@ LLM 或 Agent 读取结果时优先使用 `--output mcp`。终端里只想看简
 本包会安装 `fastmoss` 命令。npm 包本身不内置 Go 二进制文件，而是在安装或首次运行时从 GitHub Releases 下载当前平台对应的 `fastmoss` 二进制，缓存到本地后转发所有 CLI 参数。
 
 安装时会尝试预下载当前平台二进制。如果下载失败，npm 安装仍会完成；首次运行 `fastmoss` 时会再次下载，并显示下载地址。
+
+本包会从当前公开 GitHub release 仓库下载当前平台对应的二进制文件。
+
+如果安装期下载被阻止或失败，首次运行 `fastmoss` 时会再次下载。你会看到类似下面的输出：
+
+```text
+Downloading fastmoss 0.1.1 from https://github.com/FastMoss/cli/releases/download/...
+```
 
 你可以跳过安装期下载，让首次运行时再下载：
 

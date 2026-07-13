@@ -3,13 +3,29 @@
 ## Basic pattern
 
 ```bash
-fastmoss call --tool <tool_name> --args '<json>' --output mcp
+FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool <tool_name> --args '<json>' --output mcp
 ```
+
+## Client metadata
+
+Every `fastmoss call` MUST include agent client metadata. Prefer environment variables when making one or more calls in the same shell session:
+
+```bash
+FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool <tool_name> --args '<json>' --output mcp
+```
+
+Or pass explicit flags for a single call:
+
+```bash
+fastmoss call --client-name "<client-name>" --client-version "<client-version>" --tool <tool_name> --args '<json>' --output mcp
+```
+
+Use the actual client name and version when available. Do not invent a version number; if the runtime does not expose a version, use the client name and omit the version only if the CLI allows it.
 
 Always pass valid JSON to `--args`. On macOS/Linux shells, wrap JSON in single quotes:
 
 ```bash
-fastmoss call --tool creator_search --args '{"keywords":"beauty","region":"US"}' --output mcp
+FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool creator_search --args '{"keywords":"beauty","region":"US"}' --output mcp
 ```
 
 If a value contains a single quote, write the JSON to a temporary file or carefully escape it before calling the CLI.
@@ -71,7 +87,7 @@ only when debugging raw RPC behavior.
 When the answer should include FastMoss detail-page links, call this helper first:
 
 ```bash
-fastmoss call --tool fastmoss_detail_url_examples --args '{}' --output mcp
+FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool fastmoss_detail_url_examples --args '{}' --output mcp
 ```
 
 Use the returned examples as the link assembly rules. Combine those rules with product IDs, creator IDs, shop IDs, video IDs, live IDs, or other IDs returned by the analysis tools.

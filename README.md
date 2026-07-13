@@ -16,14 +16,6 @@ npm install -g @fastmoss/cli
 npx skills add FastMoss/cli -y -g
 ```
 
-## Repository Contents
-
-This public repository contains the release artifacts for FastMoss CLI:
-
-- `fastmoss/`: npm package source used by GitHub Actions to publish `@fastmoss/cli`.
-- `skills/fastmoss-cli/`: Agent Skill installable with `npx skills add FastMoss/cli -y -g`.
-- `release-assets/`: prebuilt `fastmoss` binaries and `SHA256SUMS`.
-- `.github/workflows/release.yml`: GitHub Release and npm publish workflow.
 
 ## About FastMoss
 
@@ -44,6 +36,19 @@ Install globally:
 ```bash
 npm install -g @fastmoss/cli
 fastmoss
+```
+
+Update an existing global installation:
+
+```bash
+npm install -g @fastmoss/cli@latest
+fastmoss --version
+```
+
+Update the FastMoss CLI Agent Skill:
+
+```bash
+npx skills add FastMoss/cli -y -g
 ```
 
 After global installation, the command name is `fastmoss`. If your shell prints `command not found: fastmoss`, make sure your npm global bin directory is in `PATH`.
