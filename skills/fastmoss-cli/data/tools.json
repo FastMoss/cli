@@ -231,6 +231,530 @@
             },
             {
                 "annotations": {
+                    "title": "MCN agency creator analysis",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use when the user wants agency creator structure, follower tiers, and individual collaborators. Returns distributions and a paginated creator list.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "agency_id": {
+                                    "description": "Unique MCN agency ID; use agency_search first when only the agency name is known.",
+                                    "type": "string"
+                                },
+                                "time_range_days": {
+                                    "default": 28,
+                                    "description": "Days: 7/14/28/90; recent=28; -1=cumulative.",
+                                    "enum": [
+                                        7,
+                                        28,
+                                        90
+                                    ],
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "agency_id"
+                            ],
+                            "type": "object"
+                        },
+                        "orderby": {
+                            "description": "Sort options.",
+                            "items": {
+                                "properties": {
+                                    "field": {
+                                        "description": "Field parameter.",
+                                        "enum": [
+                                            "follower_count",
+                                            "agency_collaboration_units_sold",
+                                            "agency_collaboration_gmv"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "default": "desc",
+                                        "description": "Order parameter.",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "field"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "page": {
+                            "default": 1,
+                            "description": "Page number. Default 1, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "pagesize": {
+                            "default": 10,
+                            "description": "Page size. Default 10, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_creator_analysis"
+            },
+            {
+                "annotations": {
+                    "title": "MCN agency product analysis",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use for agency product-category and price-band structure. Use agency_product_list for individual products.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "agency_id": {
+                                    "description": "Unique MCN agency ID; use agency_search first when only the agency name is known.",
+                                    "type": "string"
+                                },
+                                "time_range_days": {
+                                    "default": 28,
+                                    "description": "Days: 7/14/28/90; recent=28; -1=cumulative.",
+                                    "enum": [
+                                        7,
+                                        28,
+                                        90
+                                    ],
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "agency_id"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_product_analysis"
+            },
+            {
+                "annotations": {
+                    "title": "MCN agency product list",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use when the user wants individual products promoted through an agency. Supports category, price, period, sorting, and pagination.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "agency_id": {
+                                    "description": "Unique MCN agency ID; use agency_search first when only the agency name is known.",
+                                    "type": "string"
+                                },
+                                "maximum_price": {
+                                    "description": "Inclusive product-price upper bound; currency follows the agency market.",
+                                    "minimum": 0,
+                                    "type": "number"
+                                },
+                                "minimum_price": {
+                                    "description": "Inclusive product-price lower bound; currency follows the agency market.",
+                                    "minimum": 0,
+                                    "type": "number"
+                                },
+                                "product_category_id": {
+                                    "description": "Product category ID.",
+                                    "type": "integer"
+                                },
+                                "time_range_days": {
+                                    "default": 28,
+                                    "description": "Days: 7/14/28/90; recent=28; -1=cumulative.",
+                                    "enum": [
+                                        7,
+                                        28,
+                                        90
+                                    ],
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "agency_id"
+                            ],
+                            "type": "object"
+                        },
+                        "orderby": {
+                            "description": "Sort options.",
+                            "items": {
+                                "properties": {
+                                    "field": {
+                                        "description": "Field parameter.",
+                                        "enum": [
+                                            "agency_collaboration_units_sold",
+                                            "agency_collaboration_gmv"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "default": "desc",
+                                        "description": "Order parameter.",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "field"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "page": {
+                            "default": 1,
+                            "description": "Page number. Default 1, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "pagesize": {
+                            "default": 10,
+                            "description": "Page size. Default 10, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_product_list"
+            },
+            {
+                "annotations": {
+                    "title": "MCN agency profile and data overview",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use when the user wants an agency profile, historical performance, and recent 7/28/90-day data overview.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "agency_id": {
+                                    "description": "Unique MCN agency ID; use agency_search first when only the agency name is known.",
+                                    "type": "string"
+                                },
+                                "time_range_days": {
+                                    "default": 28,
+                                    "description": "Days: 7/14/28/90; recent=28; -1=cumulative.",
+                                    "enum": [
+                                        7,
+                                        28,
+                                        90
+                                    ],
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "agency_id"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_profile_overview"
+            },
+            {
+                "annotations": {
+                    "title": "Top MCN agencies",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use when the user wants leading MCN agencies in a market. Returns weekly or monthly agency rankings and period performance.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "date_type": {
+                                    "default": "week",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
+                                    "enum": [
+                                        "week",
+                                        "month"
+                                    ],
+                                    "type": "string"
+                                },
+                                "date_value": {
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
+                                    "type": "string"
+                                },
+                                "region": {
+                                    "description": "Country or region code, e.g. US, UK, ID.",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [],
+                            "type": "object"
+                        },
+                        "orderby": {
+                            "description": "Sort options.",
+                            "items": {
+                                "properties": {
+                                    "field": {
+                                        "description": "Field parameter.",
+                                        "enum": [
+                                            "gmv",
+                                            "collaborating_creator_count",
+                                            "collaborating_product_count",
+                                            "estimated_commission_amount"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "default": "desc",
+                                        "description": "Order parameter.",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "field"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "page": {
+                            "default": 1,
+                            "description": "Page number. Default 1, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "pagesize": {
+                            "default": 10,
+                            "description": "Page size. Default 10, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_rank_top"
+            },
+            {
+                "annotations": {
+                    "title": "MCN agency search",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use when the user has an agency name or market clue but no agency_id. Returns matching agencies and recent 7-day performance.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "region": {
+                                    "description": "Country or region code, e.g. US, UK, ID.",
+                                    "type": "string"
+                                },
+                                "search_keyword": {
+                                    "description": "Agency-name keyword, maximum 120 characters.",
+                                    "maxLength": 120,
+                                    "type": "string"
+                                }
+                            },
+                            "required": [],
+                            "type": "object"
+                        },
+                        "orderby": {
+                            "description": "Sort options.",
+                            "items": {
+                                "properties": {
+                                    "field": {
+                                        "description": "Field parameter.",
+                                        "enum": [
+                                            "recent_7d_gmv"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "default": "desc",
+                                        "description": "Order parameter.",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "field"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "page": {
+                            "default": 1,
+                            "description": "Page number. Default 1, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "pagesize": {
+                            "default": 10,
+                            "description": "Page size. Default 10, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_search"
+            },
+            {
+                "annotations": {
+                    "title": "MCN agency shop analysis",
+                    "readOnlyHint": true,
+                    "destructiveHint": false,
+                    "idempotentHint": false,
+                    "openWorldHint": true
+                },
+                "description": "Use when the user wants agency collaborating-shop totals and individual shop performance.",
+                "inputSchema": {
+                    "properties": {
+                        "filter": {
+                            "description": "Filter parameters.",
+                            "properties": {
+                                "agency_id": {
+                                    "description": "Unique MCN agency ID; use agency_search first when only the agency name is known.",
+                                    "type": "string"
+                                },
+                                "product_category_id": {
+                                    "description": "Product category ID.",
+                                    "type": "integer"
+                                },
+                                "time_range_days": {
+                                    "default": 28,
+                                    "description": "Days: 7/14/28/90; recent=28; -1=cumulative.",
+                                    "enum": [
+                                        7,
+                                        28,
+                                        90
+                                    ],
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "agency_id"
+                            ],
+                            "type": "object"
+                        },
+                        "orderby": {
+                            "description": "Sort options.",
+                            "items": {
+                                "properties": {
+                                    "field": {
+                                        "description": "Field parameter.",
+                                        "enum": [
+                                            "collaborating_product_count",
+                                            "agency_collaboration_units_sold",
+                                            "agency_collaboration_gmv"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "default": "desc",
+                                        "description": "Order parameter.",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "field"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "page": {
+                            "default": 1,
+                            "description": "Page number. Default 1, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "pagesize": {
+                            "default": 10,
+                            "description": "Page size. Default 10, max 10.",
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "filter"
+                    ],
+                    "type": "object"
+                },
+                "name": "agency_shop_analysis"
+            },
+            {
+                "annotations": {
                     "title": "Creator ecommerce summary",
                     "readOnlyHint": true,
                     "destructiveHint": false,
@@ -276,7 +800,7 @@
                             "description": "Filter parameters.",
                             "properties": {
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "type": "integer"
                                 },
                                 "end_date": {
@@ -490,7 +1014,7 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "enum": [
                                         "day",
                                         "week",
@@ -499,7 +1023,7 @@
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "ecommerce_type": {
@@ -582,7 +1106,7 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "enum": [
                                         "day",
                                         "week",
@@ -591,7 +1115,7 @@
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "region": {
@@ -679,7 +1203,7 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "enum": [
                                         "day",
                                         "week",
@@ -688,7 +1212,7 @@
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "ecommerce_type": {
@@ -1278,11 +1802,11 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "region": {
@@ -1324,7 +1848,7 @@
                                     "type": "integer"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "region": {
@@ -1366,11 +1890,11 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "region": {
@@ -1652,7 +2176,7 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "enum": [
                                         "day",
                                         "week",
@@ -1661,7 +2185,7 @@
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "is_cross_border": {
@@ -1745,7 +2269,7 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "enum": [
                                         "day",
                                         "week",
@@ -1754,7 +2278,7 @@
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "region": {
@@ -2827,7 +3351,7 @@
                                     "type": "integer"
                                 },
                                 "date_type": {
-                                    "description": "Ranking period: day, week, or month.",
+                                    "description": "Ranking period: day, week, or month; MCN agency rankings support only week/month.",
                                     "enum": [
                                         "day",
                                         "week",
@@ -2836,7 +3360,7 @@
                                     "type": "string"
                                 },
                                 "date_value": {
-                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww, last month YYYY-MM; do not use the current period.",
+                                    "description": "Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period.",
                                     "type": "string"
                                 },
                                 "is_cross_border": {

@@ -34,6 +34,7 @@ If a value contains a single quote, write the JSON to a temporary file or carefu
 
 1. Read `references/tools.md` for the packaged static catalog index, then read the matching category file:
    - `tools-advertising.md` for `ad_` tools.
+   - `tools-agency.md` for `agency_` tools.
    - `tools-creator.md` for `creator_` tools.
    - `tools-product.md` for `product_` tools.
    - `tools-shop.md` for `shop_` tools.

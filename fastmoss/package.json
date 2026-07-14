@@ -1,6 +1,6 @@
 {
   "name": "@fastmoss/cli",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "FastMoss CLI launcher for npm and npx",
   "license": "UNLICENSED",
   "private": false,

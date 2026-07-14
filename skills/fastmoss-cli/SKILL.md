@@ -1,6 +1,6 @@
 ---
-name: fastmoss-cli
-description: Use when working with FastMoss CLI, FastMoss MCP tools, TikTok Shop product, creator, shop, video, ad, category, or market data, or when the user asks an agent to call FastMoss tools from the command line.
+name: fastmoss
+description: Use when working with FastMoss CLI, FastMoss MCP tools, TikTok Shop product, creator, shop, MCN agency, video, ad, category, or market data, or when the user asks an agent to call FastMoss tools from the command line.
 ---
 
 # FastMoss CLI
@@ -18,7 +18,7 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    If the FastMoss CLI is not installed or the command is not found, install it first:
 
    ```bash
-   npm install -g @fastmoss/cli
+   npm install -g --allow-scripts=@fastmoss/cli @fastmoss/cli
    ```
 
    To update an existing FastMoss CLI installation to the latest package version, run:

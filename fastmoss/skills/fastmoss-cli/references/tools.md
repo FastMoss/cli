@@ -15,6 +15,7 @@ Use `fastmoss tools --search <tool_name>` only when the installed CLI and accoun
 | Category | File | Tools | Use for |
 |---|---|---:|---|
 | Advertising Tools | [Advertising Tools](tools-advertising.md) | 2 | Advertising tools for ad creatives, ad spend, ROAS, engagement, and paid-traffic performance analysis. |
+| Agency Tools | [Agency Tools](tools-agency.md) | 7 | Agency tools for MCN agency search, rankings, profiles, creator collaborations, promoted products, and collaborating-shop analysis. |
 | Creator Tools | [Creator Tools](tools-creator.md) | 10 | Creator tools for creator search, profile checks, ecommerce performance, audience fit, trends, videos, and partnership evaluation. |
 | Product Tools | [Product Tools](tools-product.md) | 12 | Product tools for product search, details, sales trends, creator mix, videos, SKUs, reviews, and ad investment analysis. |
 | Shop Tools | [Shop Tools](tools-shop.md) | 10 | Shop tools for shop search, profile checks, sales, products, creators, livestreams, short videos, and ad investment analysis. |
