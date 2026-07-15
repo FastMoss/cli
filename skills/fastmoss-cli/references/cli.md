@@ -5,8 +5,11 @@
 Install the CLI before using this skill:
 
 ```bash
-npm install -g @fastmoss/cli
+npm install -g @fastmoss/cli@latest
 ```
+
+This installs only the CLI. It does not install or update the Agent Skill. If
+this Skill is already installed but `fastmoss` is missing, install only the CLI.
 
 After installation, the command is:
 

@@ -15,17 +15,15 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    fastmoss --version
    ```
 
-   If the FastMoss CLI is not installed or the command is not found, install it first:
-
-   ```bash
-   npm install -g --allow-scripts=@fastmoss/cli @fastmoss/cli
-   ```
-
-   To update an existing FastMoss CLI installation to the latest package version, run:
+   If the FastMoss CLI is not installed, the command is not found, or the user
+   asks to update the CLI, install the current npm release:
 
    ```bash
    npm install -g @fastmoss/cli@latest
    ```
+
+   This installs only the CLI. Do not install or update the Agent Skill unless
+   the user separately asks for it.
 
    Then continue to the login check.
 

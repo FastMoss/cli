@@ -1,0 +1,20 @@
+{
+  "name": "@fastmoss/skill",
+  "description": "Install the FastMoss Agent Skill from npm",
+  "license": "UNLICENSED",
+  "private": false,
+  "bin": {
+    "fastmoss-skill": "bin/fastmoss-skill.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "skills",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "version": "0.1.6"
+}

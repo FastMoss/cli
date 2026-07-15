@@ -1,0 +1,16 @@
+{
+  "name": "@fastmoss/cli-linux-arm64",
+  "version": "0.1.6",
+  "description": "FastMoss CLI binary for linux/arm64",
+  "license": "UNLICENSED",
+  "private": false,
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "bin"
+  ]
+}

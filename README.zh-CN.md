@@ -2,235 +2,99 @@
 
 [English](./README.md)
 
-FastMoss CLI 用于在终端或 AI Agent 中发现并调用 FastMoss MCP 工具，覆盖 TikTok Shop 选品、达人发现、店铺分析、广告分析、市场洞察、视频/直播分析和 FastMoss 知识库查询等场景。
+FastMoss CLI 可以让终端和 AI Agent 发现并调用 FastMoss MCP 工具，用于 TikTok Shop 选品、达人发现、店铺分析、广告分析、市场洞察、短视频/直播分析和 FastMoss 知识库查询。
 
-CLI 需要配合 FastMoss CLI Agent Skill 一起使用：
+公开 release 仓库包含 GitHub clone 安装、GitHub Release 离线包和 npm 发布所需的全部输入文件。
 
-- `@fastmoss/cli` 安装 `fastmoss` 命令，用于真正执行工具调用。
-- `npx skills add FastMoss/cli` 安装 Agent Skill，让你的 Agent 知道有哪些 FastMoss 工具、什么时候使用、怎么调用。
-
-安装 CLI：
-
-```bash
-npm install -g @fastmoss/cli
-```
-
-
-## 关于 FastMoss
-
-[FastMoss](https://www.fastmoss.com/) 是面向全球 TikTok 品牌、商家、服务商、创作者和运营团队的数据分析平台。FastMoss 帮助用户洞察大盘趋势、发现爆品和品类机会、寻找达人与机构、监控竞店、分析广告投放，并研究直播生态。
-
-FastMoss 主要提供以 TikTok 和 TikTok Shop 为核心的大数据分析服务，覆盖直播、商品、店铺、达人、广告、视频、音乐、标签等版块，涵盖美国、英国、印尼、越南、菲律宾、泰国、马来西亚、西班牙、墨西哥、法国、德国、巴西等主要 TikTok 商业化国家和区域的数据。
-
+<!-- FASTMOSS_INSTALLATION_START -->
 ## 安装
 
-不安装，直接通过 npx 运行：
+CLI 与 Agent Skill 相互独立，安装其中一个不会自动安装另一个。
 
-```bash
-npx @fastmoss/cli
-```
+### npm
 
-全局安装：
-
-```bash
-npm install -g @fastmoss/cli
-fastmoss
-```
-
-更新已有的全局安装：
+只安装 CLI：
 
 ```bash
 npm install -g @fastmoss/cli@latest
-fastmoss --version
 ```
 
-安装或更新 FastMoss CLI Agent Skill：
+不做全局安装，临时运行 CLI：
 
 ```bash
-npx skills add FastMoss/cli -y -g
-npx skills add FastMoss/cli --agent claude-code
-# 如果你的 skills CLI 支持 --client：
-npx skills add FastMoss/cli --client claude
+npx -y @fastmoss/cli@latest
 ```
 
-使用 `--agent` 指定目标 agent 客户端。有些 `skills` CLI 版本可能把这个概念写作 `--client`。
-
-全局安装后，命令名是 `fastmoss`。如果终端提示 `command not found: fastmoss`，通常是 npm 全局 bin 目录没有加入 `PATH`。
-
-如果你的 npm 配置禁止 lifecycle scripts，可以允许本包的 postinstall 脚本在安装期预下载二进制：
+只安装或更新 Agent Skill：
 
 ```bash
-npm install -g --allow-scripts=@fastmoss/cli @fastmoss/cli
+npx -y @fastmoss/skill@latest
 ```
 
-## API Key 和积分
+Skill 命令全程非交互，可以直接发送到 Agent 聊天框由 Agent 执行。默认会把 `fastmoss-cli` 安装到 Codex、Claude 和通用 Agents 三个目录，并输出实际 `SKILL.md` 路径和当前会话加载提示。
 
-FastMoss 工具调用需要 API Key，并会消耗积分。访问 [FastMoss 开发者平台](https://developers.fastmoss.com/mcp/overview.html) 登录、创建 MCP API Key、查看用量并管理积分。
+指定 Agent 或卸载：
 
-常规配置：
+```bash
+npx -y @fastmoss/skill@latest --agent codex
+npx -y @fastmoss/skill@latest --agent claude
+npx -y @fastmoss/skill@latest --agent agents
+npx -y @fastmoss/skill@latest --agent all
+npx -y @fastmoss/skill@latest uninstall --agent all
+```
+
+设置 `FASTMOSS_SKILL_DIR` 后只安装到一个自定义 skills 根目录。npm 安装只使用用户配置的 npm registry，不会从 GitHub 下载文件。
+
+### GitHub clone
+
+```bash
+git clone --depth 1 https://github.com/FastMoss/cli.git
+cd cli
+./install.sh --cli
+./install.sh --skill
+./install.sh --all
+```
+
+Windows PowerShell：
+
+```powershell
+git clone --depth 1 https://github.com/FastMoss/cli.git
+cd cli
+.\install.ps1 -Cli
+.\install.ps1 -Skill
+.\install.ps1 -All
+```
+
+`--all` 和 `-All` 只是依次执行两个独立安装动作。clone 或下载 GitHub Release 离线包后，安装过程只读取本地文件，不调用 npm，也不继续下载其他文件。
+<!-- FASTMOSS_INSTALLATION_END -->
+
+## API Key 和 Credits
+
+FastMoss 工具调用需要 API Key，并会消耗 credits。请访问 [FastMoss Developer Platform](https://developers.fastmoss.com/mcp/overview.html) 登录、创建 MCP API Key、查看用量并管理 credits。
+
+常用配置：
 
 ```bash
 fastmoss login --api-key <your-api-key>
 fastmoss whoami
 ```
 
-如果积分不足，请在开发者平台的计费/价格页面充值或升级套餐。计费和积分规则见 [FastMoss MCP Pricing](https://developers.fastmoss.com/mcp/pricing.html)。
-
-## 命令
-
-查看版本和帮助：
+## 常用命令
 
 ```bash
 fastmoss --version
 fastmoss help
-```
-
-登录和本地配置：
-
-```bash
-fastmoss login --api-key <your-api-key>
-fastmoss logout
-fastmoss whoami
-fastmoss set api-key <your-api-key>
-fastmoss clear api-key
-fastmoss set language zh
-fastmoss set language en
-fastmoss show config
-fastmoss show auth
-```
-
-发现工具：
-
-```bash
 fastmoss tools
 fastmoss tools --json
-fastmoss tools --search <tool_name>
-```
-
-调用工具：
-
-```bash
 fastmoss call --tool <tool_name> --args '<json>' --output mcp
-fastmoss <tool_name> --args '<json>' --output mcp
 ```
 
-LLM 或 Agent 读取结果时优先使用 `--output mcp`。终端里只想看简洁结果时使用 `--output data`。只有调试原始 RPC 响应时才使用 `--output rpc`。
+当结果给 LLM 或 Agent 阅读时使用 `--output mcp`；终端人工查看时可使用 `--output data`。
 
-联网命令常用参数：
+## 发布内容
 
-```bash
---api-key <api-key>
---base-url <url>
---timeout <seconds>
---insecure-skip-tls
-```
-
-## 支持的工具
-
-随包发布的 Agent Skill 包含静态工具目录。你也可以执行 `fastmoss tools` 或 `fastmoss tools --json` 查看当前账号实时可用的工具列表。
-
-| 分类 | name | title |
-|---|---|---|
-| 广告工具 | `ad_data_overview` | Ad data overview |
-| 广告工具 | `ad_search` | Ad search |
-| 达人工具 | `creator_cargo_summary` | Creator ecommerce summary |
-| 达人工具 | `creator_data_trends` | Creator data trends |
-| 达人工具 | `creator_fans_distribution` | Creator fans distribution |
-| 达人工具 | `creator_product_list` | Creator product list |
-| 达人工具 | `creator_profile_overview` | Creator profile overview |
-| 达人工具 | `creator_rank_top_ecommerce` | Top ecommerce creators |
-| 达人工具 | `creator_rank_top_growth` | Top creator follower growth |
-| 达人工具 | `creator_rank_top_potential` | Top potential creators |
-| 达人工具 | `creator_search` | Creator search |
-| 达人工具 | `creator_video_analysis` | Creator video analysis |
-| 辅助和知识库工具 | `fastmoss_detail_url_examples` | FastMoss Detail URL Examples |
-| 辅助和知识库工具 | `live_detail_analysis` | Live detail analysis and category breakdown |
-| 辅助和知识库工具 | `live_products_list` | Live promoted product list |
-| 辅助和知识库工具 | `live_search` | Live search |
-| 市场洞察工具 | `market_category_analysis` | Category market analysis |
-| 市场洞察工具 | `market_category_author_sales_matrix` | Category creator sales matrix |
-| 市场洞察工具 | `market_category_ranking` | Category market ranking |
-| 商品工具 | `product_category_info` | Product category list |
-| 商品工具 | `product_creator_analysis` | Product creator analysis and creator list |
-| 商品工具 | `product_detail_info` | Product detail info |
-| 商品工具 | `product_investment` | Product ad investment analysis |
-| 商品工具 | `product_overview` | Product overview |
-| 商品工具 | `product_rank_new_listed` | New listed product ranking |
-| 商品工具 | `product_rank_top_selling` | Top selling products |
-| 商品工具 | `product_review_list` | Product review list |
-| 商品工具 | `product_sales_trend` | Product sales trend |
-| 商品工具 | `product_search` | Product search |
-| 商品工具 | `product_sku` | Product SKU analysis |
-| 商品工具 | `product_video_list` | Product video list |
-| 辅助和知识库工具 | `search_category_by_words` | Search TikTok Product Category by Keywords |
-| 辅助和知识库工具 | `search_fastmoss_documents` | FastMoss Knowledge Base Search |
-| 店铺工具 | `shop_base_info` | Shop base info |
-| 店铺工具 | `shop_creator_analysis` | Shop creator analysis and creator list |
-| 店铺工具 | `shop_data_trends` | Shop data trends |
-| 店铺工具 | `shop_investment_analysis` | Shop ad investment analysis |
-| 店铺工具 | `shop_live_analysis` | Shop live analysis and live list |
-| 店铺工具 | `shop_product_analysis` | Shop product analysis and product list |
-| 店铺工具 | `shop_rank_top_selling` | Top selling shops |
-| 店铺工具 | `shop_sale_analysis` | Shop sales analysis |
-| 店铺工具 | `shop_search` | Shop search |
-| 店铺工具 | `shop_video_analysis` | Shop video analysis and video list |
-| 辅助和知识库工具 | `video_data_trends` | Video data trends |
-| 辅助和知识库工具 | `video_detail_analysis` | Video detail analysis and product list |
-| 辅助和知识库工具 | `video_script_info` | Video subtitle script |
-| 辅助和知识库工具 | `video_search` | Video search |
-
-## 二进制下载
-
-本包会安装 `fastmoss` 命令。npm 包本身不内置 Go 二进制文件，而是在安装或首次运行时从 GitHub Releases 下载当前平台对应的 `fastmoss` 二进制，缓存到本地后转发所有 CLI 参数。
-
-安装时会尝试预下载当前平台二进制。如果下载失败，npm 安装仍会完成；首次运行 `fastmoss` 时会再次下载，并显示下载地址。
-
-本包会从当前公开 GitHub release 仓库下载当前平台对应的二进制文件。
-
-如果安装期下载被阻止或失败，首次运行 `fastmoss` 时会再次下载。你会看到类似下面的输出：
-
-```text
-Downloading fastmoss 0.1.1 from https://github.com/FastMoss/cli/releases/download/...
-```
-
-你可以跳过安装期下载，让首次运行时再下载：
-
-```bash
-FASTMOSS_SKIP_DOWNLOAD=1 npm install -g @fastmoss/cli
-```
-
-内部调试或私有镜像可以覆盖下载地址：
-
-```bash
-FASTMOSS_DOWNLOAD_BASE_URL=https://downloads.example.com/releases npx @fastmoss/cli
-```
-
-## 缓存目录
-
-默认缓存目录：
-
-```text
-~/.fastmoss/bin/<version>/<platform>/
-```
-
-自定义缓存目录：
-
-```bash
-FASTMOSS_CACHE_DIR=/custom/cache/dir npx @fastmoss/cli
-```
-
-## 支持平台
-
-- macOS `amd64`
-- macOS `arm64`
-- Linux `amd64`
-- Linux `arm64`
-- Windows `amd64`
-
-wrapper 会根据当前平台请求以下资产之一：
-
-- `fastmoss-darwin-amd64`
-- `fastmoss-darwin-arm64`
-- `fastmoss-linux-amd64`
-- `fastmoss-linux-arm64`
-- `fastmoss-windows-amd64.exe`
+- `fastmoss/`：`@fastmoss/cli` 的 npm 源码。
+- `fastmoss-skill/`：`@fastmoss/skill` 的 npm 源码。
+- `platform-packages/`：五个平台二进制 npm 包的源码。
+- `release-assets/`：GitHub Release 二进制资产和校验和。
+- `skills/fastmoss-cli/`：GitHub 安装器和 npm 打包共用的 canonical Agent Skill。

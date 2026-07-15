@@ -1,0 +1,17 @@
+{
+  "name": "fastmoss-public-release-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/run-tests.js",
+    "test:integration": "node test/npm-install.integration.js",
+    "pack:release": "node scripts/pack-release.js",
+    "archive:release": "bash scripts/create_release_archives.sh"
+  },
+  "devDependencies": {
+    "verdaccio": "6.8.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

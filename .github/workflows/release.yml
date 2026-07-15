@@ -5,47 +5,157 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing v-prefixed release tag
+        required: true
+        type: string
 
 permissions:
   contents: write
 
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+
 jobs:
-  publish-release:
-    runs-on: ubuntu-latest
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
+      - name: Checkout release tag
         uses: actions/checkout@v4
-
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release-assets/*
-
-  publish-npm:
-    needs: publish-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install test dependencies
+        run: npm ci
+
+      - name: Run package and installer tests
+        run: npm test
+
+      - name: Run isolated npm installation test
+        run: npm run test:integration
+
+      - name: Run Windows installer test
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./test/install-powershell.ps1
+
+  build-release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify tag and package versions
+        shell: bash
+        run: |
+          [[ "${RELEASE_TAG}" == v* ]] || { echo "release tag must start with v" >&2; exit 1; }
+          VERSION="${RELEASE_TAG#v}"
+          CLI_VERSION="$(node -p "require('./fastmoss/package.json').version")"
+          SKILL_VERSION="$(node -p "require('./fastmoss-skill/package.json').version")"
+          MARKER_VERSION="$(node -p "require('./.fastmoss-release.json').version")"
+          [[ "${VERSION}" == "${CLI_VERSION}" && "${VERSION}" == "${SKILL_VERSION}" && "${VERSION}" == "${MARKER_VERSION}" ]] || {
+            echo "tag, marker, CLI, and Skill versions must match" >&2
+            exit 1
+          }
+
+      - name: Install packaging dependencies
+        run: npm ci
+
+      - name: Build npm tarballs and GitHub archives
+        run: |
+          npm run pack:release
+          npm run archive:release
+
+      - name: Upload validated publish artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastmoss-release-${{ env.RELEASE_TAG }}
+          path: dist/publish
+          if-no-files-found: error
+
+  publish-npm:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Setup Node.js for npmjs
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - name: Verify package version matches tag
-        run: |
-          PACKAGE_VERSION="$(node -p "require('./fastmoss/package.json').version")"
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "${PACKAGE_VERSION}" != "${TAG_VERSION}" ]]; then
-            echo "package version ${PACKAGE_VERSION} does not match tag ${TAG_VERSION}" >&2
-            exit 1
-          fi
+      - name: Download validated publish artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fastmoss-release-${{ env.RELEASE_TAG }}
+          path: dist/publish
 
-      - name: Publish npm package
-        working-directory: fastmoss
-        run: npm publish --access public
+      - name: Publish platform packages, CLI, then Skill
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const { spawnSync } = require("node:child_process");
+          const manifest = require("./dist/publish/npm/manifest.json");
+          const expectedKinds = [
+            "platform", "platform", "platform", "platform", "platform",
+            "cli", "skill",
+          ];
+          if (manifest.length !== expectedKinds.length ||
+              manifest.some((entry, index) => entry.kind !== expectedKinds[index])) {
+            throw new Error("unexpected npm publish order");
+          }
+          for (const entry of manifest) {
+            const result = spawnSync(
+              "npm",
+              ["publish", `dist/publish/npm/${entry.file}`, "--access", "public"],
+              { stdio: "inherit" },
+            );
+            if (result.status !== 0) process.exit(result.status || 1);
+          }
+NODE
+
+  publish-github:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Download validated publish artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fastmoss-release-${{ env.RELEASE_TAG }}
+          path: dist/publish
+
+      - name: Publish raw binaries and offline bundles
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: |
+            release-assets/*
+            dist/publish/github/*

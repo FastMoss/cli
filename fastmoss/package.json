@@ -1,28 +1,29 @@
 {
   "name": "@fastmoss/cli",
   "version": "0.1.6",
-  "description": "FastMoss CLI launcher for npm and npx",
+  "description": "FastMoss CLI for npm and npx",
   "license": "UNLICENSED",
   "private": false,
   "bin": {
-    "fastmoss": "bin/fastmoss.js",
-    "fastmoss-install-skill": "bin/install-skill.js"
+    "fastmoss": "bin/fastmoss.js"
   },
   "files": [
     "bin",
     "lib",
-    "skills",
     "README.md",
     "README.zh-CN.md"
   ],
   "scripts": {
-    "postinstall": "node ./bin/postinstall.js",
     "test": "node --test ./test/*.test.js"
+  },
+  "optionalDependencies": {
+    "@fastmoss/cli-darwin-amd64": "0.1.6",
+    "@fastmoss/cli-darwin-arm64": "0.1.6",
+    "@fastmoss/cli-linux-amd64": "0.1.6",
+    "@fastmoss/cli-linux-arm64": "0.1.6",
+    "@fastmoss/cli-windows-amd64": "0.1.6"
   },
   "engines": {
     "node": ">=18"
-  },
-  "fastmoss": {
-    "downloadBaseURL": "https://github.com/FastMoss/cli/releases/download"
   }
 }

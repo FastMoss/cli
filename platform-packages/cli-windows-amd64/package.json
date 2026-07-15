@@ -1,0 +1,16 @@
+{
+  "name": "@fastmoss/cli-windows-amd64",
+  "version": "0.1.6",
+  "description": "FastMoss CLI binary for win32/x64",
+  "license": "UNLICENSED",
+  "private": false,
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin"
+  ]
+}
