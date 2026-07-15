@@ -1,79 +1,79 @@
-# FastMoss Independent Installation Implementation Plan
+# FastMoss 独立安装实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **面向 Agent 执行者：** 必须使用子技能 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans`，逐个任务实施本计划。所有步骤使用复选框（`- [ ]`）跟踪状态。
 
-**Goal:** Make npm and GitHub independent, equal-capability installation channels while allowing the FastMoss CLI and Agent Skill to be installed separately.
+**目标：** 将 npm 和 GitHub 建设为相互独立、能力对等的安装渠道，同时支持分别安装 FastMoss CLI 与 Agent Skill。
 
-**Architecture:** `@fastmoss/cli` becomes a download-free launcher backed by exact-version, platform-specific npm packages. `@fastmoss/skill` becomes a standalone npm executable that copies the canonical Skill into Agent directories, while GitHub ships local shell/PowerShell installers and per-platform offline archives from the same binaries and Skill source.
+**架构：** `@fastmoss/cli` 改为不执行下载的启动器，由精确版本的平台专用 npm 包提供二进制。`@fastmoss/skill` 改为独立 npm 可执行包，把唯一来源的 Skill 复制到 Agent 目录；GitHub 则基于相同二进制和 Skill 源码发布本地 Shell/PowerShell 安装器及各平台离线压缩包。
 
-**Tech Stack:** Node.js 18+ CommonJS, Node built-in test runner, npm optional dependencies, Verdaccio 6.8.0 for isolated-registry tests, Bash, PowerShell, GitHub Actions.
+**技术栈：** Node.js 18+ CommonJS、Node 内置测试运行器、npm optional dependencies、用于隔离 registry 测试的 Verdaccio 6.8.0、Bash、PowerShell、GitHub Actions。
 
 ---
 
-## Context And Constraints
+## 背景与约束
 
-- Design spec: `docs/superpowers/specs/2026-07-14-fastmoss-installation-redesign-design.md`
-- Baseline on 2026-07-15: `cd fastmoss && npm test` passes 21 tests.
-- Checked-in binaries report version `0.1.6`; do not bump the release version as part of this refactor.
-- `fastmoss/package.json` remains the single release-version source.
-- Never restore a GitHub download fallback in the npm launcher.
-- Preserve unrelated worktree changes. At execution time, create an isolated worktree with `superpowers:using-git-worktrees`.
+- 设计规范：`docs/superpowers/specs/2026-07-14-fastmoss-installation-redesign-design.md`
+- 2026-07-15 基线：`cd fastmoss && npm test` 的 21 个测试全部通过。
+- 仓库内二进制报告版本为 `0.1.6`；本次重构不提升发布版本。
+- `fastmoss/package.json` 继续作为唯一发布版本来源。
+- npm 启动器中绝不能恢复 GitHub 下载兜底。
+- 保留工作树中无关的用户改动。执行时使用 `superpowers:using-git-worktrees` 创建隔离工作树。
 
-## File Map
+## 文件职责
 
-### CLI launcher
+### CLI 启动器
 
-- Create `fastmoss/lib/targets.js`: one target table shared by runtime and package generation.
-- Replace `fastmoss/lib/runtime.js`: resolve and spawn the installed npm platform package.
-- Modify `fastmoss/bin/fastmoss.js`: propagate returned exit code.
-- Replace `fastmoss/test/fastmoss.test.js`: runtime and platform-resolution tests.
-- Create `fastmoss/test/package.test.js`: published main-package contract tests.
-- Modify `fastmoss/package.json`: only `fastmoss` bin, exact optional dependencies, no lifecycle scripts.
-- Delete `fastmoss/bin/install-skill.js`, `fastmoss/bin/postinstall.js`, and `fastmoss/skills/`.
+- 新建 `fastmoss/lib/targets.js`：供运行时和打包流程共用的唯一平台目标表。
+- 替换 `fastmoss/lib/runtime.js`：解析并启动已安装的 npm 平台包。
+- 修改 `fastmoss/bin/fastmoss.js`：传递子进程退出码。
+- 替换 `fastmoss/test/fastmoss.test.js`：运行时与平台解析测试。
+- 新建 `fastmoss/test/package.test.js`：主 npm 包发布契约测试。
+- 修改 `fastmoss/package.json`：只保留 `fastmoss` bin，使用精确 optional dependencies，不包含 lifecycle scripts。
+- 删除 `fastmoss/bin/install-skill.js`、`fastmoss/bin/postinstall.js` 和 `fastmoss/skills/`。
 
-### Standalone Skill package
+### 独立 Skill 包
 
-- Create `fastmoss-skill/lib/installer.js`: argument parsing, target resolution, atomic install/update, uninstall, and Agent handoff.
-- Create `fastmoss-skill/bin/fastmoss-skill.js`: executable entry point.
-- Create `fastmoss-skill/package.template.json`: versionless publish manifest template.
-- Create `fastmoss-skill/test/installer.test.js`: installer behavior tests.
-- Create `fastmoss-skill/README.md` and `fastmoss-skill/README.zh-CN.md`: npm package docs.
+- 新建 `fastmoss-skill/lib/installer.js`：参数解析、目标解析、原子安装/升级、卸载和 Agent handoff。
+- 新建 `fastmoss-skill/bin/fastmoss-skill.js`：可执行入口。
+- 新建 `fastmoss-skill/package.template.json`：不含版本号的发布 manifest 模板。
+- 新建 `fastmoss-skill/test/installer.test.js`：安装器行为测试。
+- 新建 `fastmoss-skill/README.md` 和 `fastmoss-skill/README.zh-CN.md`：npm 包文档。
 
-### Release generation and verification
+### 发布物生成与验证
 
-- Create `package.json` and `package-lock.json`: repository-level test/build commands and pinned Verdaccio.
-- Modify `.gitignore`: ignore generated `dist/`.
-- Create `scripts/build-release-packages.js`: verify hashes and generate platform npm packages, Skill npm package, and GitHub staging trees.
-- Create `scripts/run-tests.js`: discover only `*.test.js` unit/contract files so the registry integration script never runs implicitly.
-- Create `scripts/pack-release.js`: create npm tarballs and release manifest in publish order.
-- Create `scripts/create-release-archives.sh`: make `.tar.gz` and `.zip` GitHub archives.
-- Create `test/release-packages.test.js`: generated-package and archive-staging contracts.
-- Create `test/npm-install.integration.js`: local-registry end-to-end installation.
+- 新建 `package.json` 和 `package-lock.json`：仓库级测试/构建命令及固定版本的 Verdaccio。
+- 修改 `.gitignore`：忽略生成的 `dist/`。
+- 新建 `scripts/build-release-packages.js`：校验哈希并生成平台 npm 包、Skill npm 包和 GitHub staging 目录。
+- 新建 `scripts/run-tests.js`：只发现 `*.test.js` 单元/契约测试，避免隐式运行 registry 集成脚本。
+- 新建 `scripts/pack-release.js`：按发布顺序生成 npm tarball 与发布 manifest。
+- 新建 `scripts/create-release-archives.sh`：生成 `.tar.gz` 和 `.zip` GitHub 压缩包。
+- 新建 `test/release-packages.test.js`：生成包与压缩包 staging 契约测试。
+- 新建 `test/npm-install.integration.js`：本地 registry 端到端安装测试。
 
-### GitHub installers and release
+### GitHub 安装器与发布
 
-- Create `install.sh`: macOS/Linux local installer.
-- Create `install.ps1`: Windows local installer.
-- Create `test/install-sh.test.js`: Unix installer fixture tests.
-- Create `test/install-powershell.ps1`: Windows installer smoke and checksum tests.
-- Replace `.github/workflows/release.yml`: validate first, publish generated npm tarballs and GitHub archives independently.
+- 新建 `install.sh`：macOS/Linux 本地安装器。
+- 新建 `install.ps1`：Windows 本地安装器。
+- 新建 `test/install-sh.test.js`：Unix 安装器 fixture 测试。
+- 新建 `test/install-powershell.ps1`：Windows 安装器冒烟与校验和测试。
+- 替换 `.github/workflows/release.yml`：先验证，再独立发布生成的 npm tarball 和 GitHub 压缩包。
 
-### User-facing instructions
+### 用户文档
 
-- Modify `README.md`, `README.zh-CN.md`, `fastmoss/README.md`, and `fastmoss/README.zh-CN.md`.
-- Modify `skills/fastmoss-cli/SKILL.md` and `skills/fastmoss-cli/references/cli.md`.
+- 修改 `README.md`、`README.zh-CN.md`、`fastmoss/README.md` 和 `fastmoss/README.zh-CN.md`。
+- 修改 `skills/fastmoss-cli/SKILL.md` 和 `skills/fastmoss-cli/references/cli.md`。
 
-## Task 1: Resolve CLI Binaries From Installed Platform Packages
+## 任务 1：从已安装的平台包解析 CLI 二进制
 
-**Files:**
-- Create: `fastmoss/lib/targets.js`
-- Replace: `fastmoss/lib/runtime.js`
-- Modify: `fastmoss/bin/fastmoss.js`
-- Replace: `fastmoss/test/fastmoss.test.js`
+**文件：**
+- 新建：`fastmoss/lib/targets.js`
+- 替换：`fastmoss/lib/runtime.js`
+- 修改：`fastmoss/bin/fastmoss.js`
+- 替换：`fastmoss/test/fastmoss.test.js`
 
-- [ ] **Step 1: Replace the runtime test file with failing platform-package tests**
+- [ ] **步骤 1：用预期失败的平台包测试替换运行时测试文件**
 
-Use this test shape. It defines the public function names used by all later tasks:
+使用以下测试结构。它定义后续任务统一使用的公共函数名：
 
 ```js
 const test = require("node:test");
@@ -247,20 +247,20 @@ test("runCLI reports a child signal as an error", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests and verify the old downloader API fails the new contract**
+- [ ] **步骤 2：运行测试，确认旧下载器 API 不满足新契约**
 
-Run:
+运行：
 
 ```bash
 cd fastmoss
 npm test
 ```
 
-Expected: FAIL because `lib/targets.js` and `resolvePlatformBinary` do not exist.
+预期：失败，因为 `lib/targets.js` 和 `resolvePlatformBinary` 尚不存在。
 
-- [ ] **Step 3: Create the shared target table**
+- [ ] **步骤 3：创建共享平台目标表**
 
-Create `fastmoss/lib/targets.js`:
+新建 `fastmoss/lib/targets.js`：
 
 ```js
 const PLATFORM_TARGETS = Object.freeze({
@@ -325,9 +325,9 @@ function resolvePlatformTarget({
 module.exports = { PLATFORM_TARGETS, resolvePlatformTarget };
 ```
 
-- [ ] **Step 4: Replace the downloader runtime with package resolution and process forwarding**
+- [ ] **步骤 4：用包解析和进程转发替换下载器运行时**
 
-Replace `fastmoss/lib/runtime.js` with:
+将 `fastmoss/lib/runtime.js` 替换为：
 
 ```js
 const fs = require("node:fs");
@@ -423,7 +423,7 @@ async function runCLI({
 module.exports = { reinstallMessage, resolvePlatformBinary, runCLI };
 ```
 
-Modify `fastmoss/bin/fastmoss.js`:
+修改 `fastmoss/bin/fastmoss.js`：
 
 ```js
 #!/usr/bin/env node
@@ -441,31 +441,31 @@ runCLI({ version: packageJSON.version })
   });
 ```
 
-- [ ] **Step 5: Run the CLI tests**
+- [ ] **步骤 5：运行 CLI 测试**
 
-Run: `cd fastmoss && npm test`
+运行：`cd fastmoss && npm test`
 
-Expected: all new runtime tests PASS and no HTTP server is started.
+预期：所有新运行时测试通过，并且不会启动 HTTP 服务器。
 
-- [ ] **Step 6: Commit the runtime change**
+- [ ] **步骤 6：提交运行时改动**
 
 ```bash
 git add fastmoss/lib/targets.js fastmoss/lib/runtime.js fastmoss/bin/fastmoss.js fastmoss/test/fastmoss.test.js
 git commit -m "feat: resolve CLI from npm platform packages"
 ```
 
-## Task 2: Make The Main npm Package CLI-Only
+## 任务 2：将主 npm 包改为仅包含 CLI
 
-**Files:**
-- Create: `fastmoss/test/package.test.js`
-- Modify: `fastmoss/package.json`
-- Delete: `fastmoss/bin/install-skill.js`
-- Delete: `fastmoss/bin/postinstall.js`
-- Delete: `fastmoss/skills/fastmoss-cli/`
+**文件：**
+- 新建：`fastmoss/test/package.test.js`
+- 修改：`fastmoss/package.json`
+- 删除：`fastmoss/bin/install-skill.js`
+- 删除：`fastmoss/bin/postinstall.js`
+- 删除：`fastmoss/skills/fastmoss-cli/`
 
-- [ ] **Step 1: Write the failing package-contract test**
+- [ ] **步骤 1：编写预期失败的包契约测试**
 
-Create `fastmoss/test/package.test.js`:
+新建 `fastmoss/test/package.test.js`：
 
 ```js
 const test = require("node:test");
@@ -506,16 +506,15 @@ test("npm tarball contains no Skill or downloader entry point", () => {
 });
 ```
 
-- [ ] **Step 2: Verify the package test fails**
+- [ ] **步骤 2：确认包契约测试失败**
 
-Run: `cd fastmoss && npm test`
+运行：`cd fastmoss && npm test`
 
-Expected: FAIL because the package still exposes `fastmoss-install-skill`, has
-`postinstall`, and includes `skills`.
+预期：失败，因为包仍暴露 `fastmoss-install-skill`，仍有 `postinstall`，并包含 `skills`。
 
-- [ ] **Step 3: Replace the package manifest**
+- [ ] **步骤 3：替换包 manifest**
 
-Keep version `0.1.6` and use this contract:
+保持版本 `0.1.6`，采用以下契约：
 
 ```json
 {
@@ -549,12 +548,11 @@ Keep version `0.1.6` and use this contract:
 }
 ```
 
-Delete the two obsolete bin scripts and the duplicate `fastmoss/skills`
-directory. Do not touch canonical `skills/fastmoss-cli`.
+删除两个废弃的 bin 脚本和重复的 `fastmoss/skills` 目录。不要修改唯一来源 `skills/fastmoss-cli`。
 
-- [ ] **Step 4: Run tests and inspect the tarball**
+- [ ] **步骤 4：运行测试并检查 tarball**
 
-Run:
+运行：
 
 ```bash
 cd fastmoss
@@ -562,9 +560,9 @@ npm test
 npm pack --dry-run --json
 ```
 
-Expected: tests PASS; no Skill or obsolete installer file appears.
+预期：测试通过；tarball 中不出现 Skill 或废弃安装器文件。
 
-- [ ] **Step 5: Commit the CLI-only package**
+- [ ] **步骤 5：提交仅包含 CLI 的主包**
 
 ```bash
 git add fastmoss/package.json fastmoss/test/package.test.js
@@ -572,19 +570,19 @@ git add -A fastmoss/bin fastmoss/skills
 git commit -m "refactor: make CLI npm package independent"
 ```
 
-## Task 3: Build The Standalone Skill Installer
+## 任务 3：构建独立 Skill 安装器
 
-**Files:**
-- Create: `fastmoss-skill/lib/installer.js`
-- Create: `fastmoss-skill/bin/fastmoss-skill.js`
-- Create: `fastmoss-skill/package.template.json`
-- Create: `fastmoss-skill/test/installer.test.js`
-- Create: `fastmoss-skill/README.md`
-- Create: `fastmoss-skill/README.zh-CN.md`
+**文件：**
+- 新建：`fastmoss-skill/lib/installer.js`
+- 新建：`fastmoss-skill/bin/fastmoss-skill.js`
+- 新建：`fastmoss-skill/package.template.json`
+- 新建：`fastmoss-skill/test/installer.test.js`
+- 新建：`fastmoss-skill/README.md`
+- 新建：`fastmoss-skill/README.zh-CN.md`
 
-- [ ] **Step 1: Write failing tests for parsing, targets, replacement, rollback, and uninstall**
+- [ ] **步骤 1：为参数解析、目标目录、替换、回滚和卸载编写预期失败的测试**
 
-Create `fastmoss-skill/test/installer.test.js` with real temporary directories:
+新建 `fastmoss-skill/test/installer.test.js`，使用真实临时目录：
 
 ```js
 const test = require("node:test");
@@ -754,15 +752,15 @@ test("installSkill surfaces the destination on a permission failure", async () =
 });
 ```
 
-- [ ] **Step 2: Run Skill tests and verify they fail**
+- [ ] **步骤 2：运行 Skill 测试并确认失败**
 
-Run: `node --test fastmoss-skill/test/*.test.js`
+运行：`node --test fastmoss-skill/test/*.test.js`
 
-Expected: FAIL because `lib/installer.js` does not exist.
+预期：失败，因为 `lib/installer.js` 尚不存在。
 
-- [ ] **Step 3: Implement the installer API**
+- [ ] **步骤 3：实现安装器 API**
 
-Create `fastmoss-skill/lib/installer.js` with these exports and rules:
+新建 `fastmoss-skill/lib/installer.js`，采用以下导出与规则：
 
 ```js
 const fs = require("node:fs");
@@ -938,9 +936,9 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Add executable and versionless package template**
+- [ ] **步骤 4：添加可执行入口和无版本号包模板**
 
-Create `fastmoss-skill/bin/fastmoss-skill.js`:
+新建 `fastmoss-skill/bin/fastmoss-skill.js`：
 
 ```js
 #!/usr/bin/env node
@@ -973,9 +971,9 @@ main().catch((error) => {
 });
 ```
 
-Run `chmod +x fastmoss-skill/bin/fastmoss-skill.js`.
+运行 `chmod +x fastmoss-skill/bin/fastmoss-skill.js`。
 
-Create `fastmoss-skill/package.template.json`:
+新建 `fastmoss-skill/package.template.json`：
 
 ```json
 {
@@ -999,36 +997,34 @@ Create `fastmoss-skill/package.template.json`:
 }
 ```
 
-Write both package READMEs with `npx -y @fastmoss/skill@latest`, the four
-`--agent` values, `uninstall`, `FASTMOSS_SKILL_DIR`, and an explicit statement
-that this package neither contains nor installs `@fastmoss/cli`.
+在两个包 README 中写明 `npx -y @fastmoss/skill@latest`、四种 `--agent` 值、`uninstall`、`FASTMOSS_SKILL_DIR`，并明确声明该包既不包含也不安装 `@fastmoss/cli`。
 
-- [ ] **Step 5: Run Skill tests**
+- [ ] **步骤 5：运行 Skill 测试**
 
-Run: `node --test fastmoss-skill/test/*.test.js`
+运行：`node --test fastmoss-skill/test/*.test.js`
 
-Expected: all tests PASS, including rollback and unowned-directory preservation.
+预期：所有测试通过，包括回滚和保留非本安装器管理目录的测试。
 
-- [ ] **Step 6: Commit standalone installer source**
+- [ ] **步骤 6：提交独立安装器源码**
 
 ```bash
 git add fastmoss-skill
 git commit -m "feat: add standalone npm Skill installer"
 ```
 
-## Task 4: Generate And Verify npm Release Packages
+## 任务 4：生成并验证 npm 发布包
 
-**Files:**
-- Create: `package.json`
-- Modify: `.gitignore`
-- Create: `scripts/run-tests.js`
-- Create: `scripts/build-release-packages.js`
-- Create: `scripts/pack-release.js`
-- Create: `test/release-packages.test.js`
+**文件：**
+- 新建：`package.json`
+- 修改：`.gitignore`
+- 新建：`scripts/run-tests.js`
+- 新建：`scripts/build-release-packages.js`
+- 新建：`scripts/pack-release.js`
+- 新建：`test/release-packages.test.js`
 
-- [ ] **Step 1: Add a failing generated-package contract test**
+- [ ] **步骤 1：添加预期失败的生成包契约测试**
 
-Create `test/release-packages.test.js`:
+新建 `test/release-packages.test.js`：
 
 ```js
 const test = require("node:test");
@@ -1094,21 +1090,17 @@ test("main optional dependencies match generated targets and version", () => {
 });
 ```
 
-- [ ] **Step 2: Run the release-package test and verify it fails**
+- [ ] **步骤 2：运行发布包测试并确认失败**
 
-Run: `node --test test/release-packages.test.js`
+运行：`node --test test/release-packages.test.js`
 
-Expected: FAIL because `scripts/build-release-packages.js` does not exist.
+预期：失败，因为 `scripts/build-release-packages.js` 尚不存在。
 
-- [ ] **Step 3: Implement deterministic package generation**
+- [ ] **步骤 3：实现确定性的包生成流程**
 
-Create `scripts/build-release-packages.js`. It must read the version from
-`fastmoss/package.json`, parse and verify every SHA-256 entry, recreate
-`<outputRoot>/npm`, generate platform manifests from `PLATFORM_TARGETS`, chmod
-Unix binaries to `0755`, and build the Skill package from `fastmoss-skill/`
-plus canonical `skills/fastmoss-cli`.
+新建 `scripts/build-release-packages.js`。它必须从 `fastmoss/package.json` 读取版本，解析并校验每条 SHA-256 记录，重新创建 `<outputRoot>/npm`，根据 `PLATFORM_TARGETS` 生成平台 manifest，将 Unix 二进制权限设为 `0755`，并基于 `fastmoss-skill/` 与唯一来源 `skills/fastmoss-cli` 构建 Skill 包。
 
-Use these helpers:
+使用以下辅助函数：
 
 ```js
 const crypto = require("node:crypto");
@@ -1137,7 +1129,7 @@ async function sha256(filePath) {
 }
 ```
 
-Each platform manifest is:
+每个平台 manifest 为：
 
 ```js
 const manifest = {
@@ -1152,11 +1144,9 @@ const manifest = {
 };
 ```
 
-Build the Skill manifest by spreading `package.template.json` and adding
-`version`. Export `buildReleasePackages`, `copyTree`, `parseChecksums`, and
-`sha256`. Direct execution writes to repository `dist/`.
+展开 `package.template.json` 并加入 `version` 生成 Skill manifest。导出 `buildReleasePackages`、`copyTree`、`parseChecksums` 和 `sha256`。直接执行脚本时写入仓库 `dist/`。
 
-The initial npm-generation function is:
+初始 npm 包生成函数如下：
 
 ```js
 async function buildReleasePackages({
@@ -1241,7 +1231,7 @@ async function buildReleasePackages({
 }
 ```
 
-Finish the builder with:
+在构建器末尾加入：
 
 ```js
 if (require.main === module) {
@@ -1259,9 +1249,9 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Add repository commands and ignore generated output**
+- [ ] **步骤 4：添加仓库级命令并忽略生成物**
 
-Create root `package.json`:
+新建根目录 `package.json`：
 
 ```json
 {
@@ -1280,12 +1270,9 @@ Create root `package.json`:
 }
 ```
 
-Append `/dist/` to `.gitignore`. The private workspace version is not a
-release version.
+在 `.gitignore` 追加 `/dist/`。该私有 workspace 的版本号不是发布版本。
 
-Create `scripts/run-tests.js` so it recursively collects only files ending in
-`.test.js` under `fastmoss/test`, `fastmoss-skill/test`, and `test`. Use the
-complete file:
+新建 `scripts/run-tests.js`，递归收集 `fastmoss/test`、`fastmoss-skill/test` 和 `test` 下仅以 `.test.js` 结尾的文件。完整文件如下：
 
 ```js
 const fs = require("node:fs");
@@ -1321,14 +1308,11 @@ const result = spawnSync(
 process.exitCode = result.status || 0;
 ```
 
-Throw when no test files are found. This script must not include
-`test/npm-install.integration.js`.
+找不到测试文件时抛出错误。该脚本不得包含 `test/npm-install.integration.js`。
 
-- [ ] **Step 5: Implement tarball packing and publish order**
+- [ ] **步骤 5：实现 tarball 打包与发布顺序**
 
-Create `scripts/pack-release.js` using
-`spawnSync("npm", ["pack", packageRoot, "--json", "--pack-destination", destination])`.
-Pack in this exact order:
+新建 `scripts/pack-release.js`，使用 `spawnSync("npm", ["pack", packageRoot, "--json", "--pack-destination", destination])`。严格按以下顺序打包：
 
 ```js
 const fs = require("node:fs");
@@ -1353,7 +1337,7 @@ const packageRoots = [
 ];
 ```
 
-Complete the file with:
+使用以下代码完成该文件：
 
 ```js
 const destination = path.join(repoRoot, "dist", "publish", "npm");
@@ -1390,11 +1374,11 @@ fs.writeFileSync(
 );
 ```
 
-The resulting manifest is the ordered array consumed by publishing.
+生成的 manifest 是发布流程消费的有序数组。
 
-- [ ] **Step 6: Run package tests and inspect tarballs**
+- [ ] **步骤 6：运行包测试并检查 tarball**
 
-Run:
+运行：
 
 ```bash
 npm test
@@ -1403,32 +1387,28 @@ npm run pack:release
 node -e 'const m=require("./dist/publish/npm/manifest.json"); if(m.length!==7) process.exit(1)'
 ```
 
-Expected: tests PASS and seven `.tgz` files exist.
+预期：测试通过，并生成 7 个 `.tgz` 文件。
 
-- [ ] **Step 7: Commit package generation**
+- [ ] **步骤 7：提交包生成流程**
 
 ```bash
 git add .gitignore package.json scripts/run-tests.js scripts/build-release-packages.js scripts/pack-release.js test/release-packages.test.js
 git commit -m "build: generate independent npm release packages"
 ```
 
-## Task 5: Add The macOS And Linux GitHub Installer
+## 任务 5：添加 macOS 与 Linux 的 GitHub 安装器
 
-**Files:**
-- Create: `install.sh`
-- Create: `test/install-sh.test.js`
+**文件：**
+- 新建：`install.sh`
+- 新建：`test/install-sh.test.js`
 
-- [ ] **Step 1: Write fixture tests for separate components and checksum failure**
+- [ ] **步骤 1：为组件独立安装和校验和失败编写 fixture 测试**
 
-Create `test/install-sh.test.js`. Its `createUnixInstallerFixture()` helper
-must use `os.platform()` and `os.arch()` to choose the host asset name, create
-an executable that prints `0.1.6`, write its SHA-256 to `SHA256SUMS`, create a
-minimal `skills/fastmoss-cli/SKILL.md`, and copy `install.sh`.
+新建 `test/install-sh.test.js`。其中 `createUnixInstallerFixture()` 辅助函数必须使用 `os.platform()` 和 `os.arch()` 选择宿主机资产名，创建一个输出 `0.1.6` 的可执行文件，将其 SHA-256 写入 `SHA256SUMS`，创建最小化的 `skills/fastmoss-cli/SKILL.md`，并复制 `install.sh`。
 
-Define `const unixTest = process.platform === "win32" ? test.skip : test;` so
-Windows runs the dedicated PowerShell suite instead of requiring Bash.
+定义 `const unixTest = process.platform === "win32" ? test.skip : test;`，使 Windows 运行专用 PowerShell 测试，而不是依赖 Bash。
 
-Add these tests:
+添加以下测试：
 
 ```js
 unixTest("install.sh --all installs CLI and Skill without npm", async () => {
@@ -1496,22 +1476,19 @@ unixTest("install.sh reports an unwritable destination", async () => {
 });
 ```
 
-Register each fixture root with `test.after()` for recursive cleanup. The
-fixture must not invoke npm or access the network.
+使用 `test.after()` 注册每个 fixture 根目录以递归清理。fixture 不得调用 npm 或访问网络。
 
-- [ ] **Step 2: Run Unix installer tests and verify they fail**
+- [ ] **步骤 2：运行 Unix 安装器测试并确认失败**
 
-Run: `node --test test/install-sh.test.js`
+运行：`node --test test/install-sh.test.js`
 
-Expected: FAIL because `install.sh` does not exist.
+预期：失败，因为 `install.sh` 尚不存在。
 
-- [ ] **Step 3: Implement `install.sh`**
+- [ ] **步骤 3：实现 `install.sh`**
 
-The Bash script must require one of `--cli`, `--skill`, or `--all`; accept
-`--agent`, `--bin-dir`, and `--skill-dir`; and let command-line values override
-`FASTMOSS_SKILL_AGENT`, `FASTMOSS_BIN_DIR`, and `FASTMOSS_SKILL_DIR`.
+Bash 脚本必须要求提供 `--cli`、`--skill` 或 `--all` 之一；接受 `--agent`、`--bin-dir` 和 `--skill-dir`；命令行参数优先于 `FASTMOSS_SKILL_AGENT`、`FASTMOSS_BIN_DIR` 和 `FASTMOSS_SKILL_DIR`。
 
-Use this checksum implementation:
+使用以下校验和实现：
 
 ```bash
 die() {
@@ -1535,16 +1512,11 @@ verify_asset() {
 }
 ```
 
-Map `Darwin/x86_64`, `Darwin/arm64`, `Linux/x86_64`, and `Linux/aarch64` to
-the four Unix release assets. Verify the selected asset before executing it,
-then derive `VERSION` with `--version`; this does not install CLI or require
-Node.
+将 `Darwin/x86_64`、`Darwin/arm64`、`Linux/x86_64` 和 `Linux/aarch64` 映射到四个 Unix 发布资产。先校验选中的资产，再执行 `--version` 得到 `VERSION`；这个过程不会安装 CLI，也不依赖 Node。
 
-Install the CLI with `install -m 0755` into
-`${FASTMOSS_BIN_DIR:-$HOME/.local/bin}` unless `--bin-dir` is present. Print a
-PATH command when the target is absent from `$PATH`; never edit shell files.
+除非提供 `--bin-dir`，否则使用 `install -m 0755` 将 CLI 安装到 `${FASTMOSS_BIN_DIR:-$HOME/.local/bin}`。当目标目录不在 `$PATH` 时输出 PATH 配置命令，但绝不修改 shell 配置文件。
 
-Use this atomic Skill function:
+使用以下 Skill 原子安装函数：
 
 ```bash
 install_skill_root() {
@@ -1570,42 +1542,40 @@ install_skill_root() {
 }
 ```
 
-Without a custom Skill directory, default to `$CODEX_HOME`/`~/.codex`,
-`$CLAUDE_HOME`/`~/.claude`, and `$AGENTS_HOME`/`~/.agents`. Print the installed
-`SKILL.md` path and current-Agent handoff.
+未指定自定义 Skill 目录时，默认使用 `$CODEX_HOME`/`~/.codex`、`$CLAUDE_HOME`/`~/.claude` 和 `$AGENTS_HOME`/`~/.agents`。输出已安装的 `SKILL.md` 路径和当前 Agent handoff。
 
-Run `chmod +x install.sh` so clone and archive users can execute it directly.
+运行 `chmod +x install.sh`，确保 clone 和压缩包用户可以直接执行。
 
-- [ ] **Step 4: Run Unix tests and syntax validation**
+- [ ] **步骤 4：运行 Unix 测试和语法校验**
 
-Run:
+运行：
 
 ```bash
 bash -n install.sh
 node --test test/install-sh.test.js
 ```
 
-Expected: syntax check and all fixture tests PASS.
+预期：语法检查和全部 fixture 测试通过。
 
-- [ ] **Step 5: Commit the Unix installer**
+- [ ] **步骤 5：提交 Unix 安装器**
 
 ```bash
 git add install.sh test/install-sh.test.js
 git commit -m "feat: add offline GitHub installer for Unix"
 ```
 
-## Task 6: Add Windows Installation And GitHub Offline Archives
+## 任务 6：添加 Windows 安装与 GitHub 离线压缩包
 
-**Files:**
-- Create: `install.ps1`
-- Create: `test/install-powershell.ps1`
-- Modify: `scripts/build-release-packages.js`
-- Modify: `test/release-packages.test.js`
-- Create: `scripts/create-release-archives.sh`
+**文件：**
+- 新建：`install.ps1`
+- 新建：`test/install-powershell.ps1`
+- 修改：`scripts/build-release-packages.js`
+- 修改：`test/release-packages.test.js`
+- 新建：`scripts/create-release-archives.sh`
 
-- [ ] **Step 1: Add failing GitHub staging assertions**
+- [ ] **步骤 1：添加预期失败的 GitHub staging 断言**
 
-Extend `test/release-packages.test.js`:
+扩展 `test/release-packages.test.js`：
 
 ```js
 test("buildReleasePackages creates one self-contained GitHub tree per target", async () => {
@@ -1658,15 +1628,15 @@ test("GitHub installers contain no package-manager or download command", async (
 });
 ```
 
-- [ ] **Step 2: Verify staging test fails**
+- [ ] **步骤 2：确认 staging 测试失败**
 
-Run: `node --test test/release-packages.test.js`
+运行：`node --test test/release-packages.test.js`
 
-Expected: FAIL because `<outputRoot>/github` is not generated.
+预期：失败，因为尚未生成 `<outputRoot>/github`。
 
-- [ ] **Step 3: Implement the PowerShell installer**
+- [ ] **步骤 3：实现 PowerShell 安装器**
 
-Create `install.ps1` with:
+新建 `install.ps1`，参数如下：
 
 ```powershell
 param(
@@ -1680,12 +1650,9 @@ param(
 )
 ```
 
-Reject non-AMD64 Windows, select `fastmoss-windows-amd64.exe`, verify
-`Get-FileHash -Algorithm SHA256` before executing it, derive the version with
-`& $AssetPath --version`, and copy it to
-`$env:LOCALAPPDATA\FastMoss\bin\fastmoss.exe` unless overridden.
+拒绝非 AMD64 Windows，选择 `fastmoss-windows-amd64.exe`，执行前使用 `Get-FileHash -Algorithm SHA256` 校验，通过 `& $AssetPath --version` 获取版本；除非显式覆盖，否则复制到 `$env:LOCALAPPDATA\FastMoss\bin\fastmoss.exe`。
 
-Use this target resolver:
+使用以下目标目录解析器：
 
 ```powershell
 function Get-SkillRoots {
@@ -1712,27 +1679,24 @@ function Get-SkillRoots {
 }
 ```
 
-Use sibling `.tmp-$PID` and `.backup-$PID` directories for replacement. Write
-the same manifest and Agent handoff as `install.sh`. Do not call npm,
-`Invoke-WebRequest`, or any network API.
+使用同级 `.tmp-$PID` 和 `.backup-$PID` 目录完成替换。写入与 `install.sh` 相同的 manifest 和 Agent handoff。不得调用 npm、`Invoke-WebRequest` 或任何网络 API。
 
-- [ ] **Step 4: Add Windows smoke and checksum tests**
+- [ ] **步骤 4：添加 Windows 冒烟与校验和测试**
 
-Create `test/install-powershell.ps1`. It must:
+新建 `test/install-powershell.ps1`。它必须：
 
-1. Create a temporary tree containing `install.ps1`, the Windows asset,
-   canonical Skill, and `SHA256SUMS`.
-2. Run `-All` with temporary `-BinDir` and `-SkillDir`.
-3. Assert executable, `SKILL.md`, and manifest exist.
-4. Append one byte to the fixture asset.
-5. Run `-Cli` again and require nonzero exit plus `checksum mismatch`.
-6. Remove the temporary tree in `finally`.
+1. 创建包含 `install.ps1`、Windows 资产、唯一 Skill 和 `SHA256SUMS` 的临时目录树。
+2. 使用临时 `-BinDir` 和 `-SkillDir` 运行 `-All`。
+3. 断言可执行文件、`SKILL.md` 和 manifest 存在。
+4. 向 fixture 资产追加一个字节。
+5. 再次运行 `-Cli`，要求返回非零退出码且输出包含 `checksum mismatch`。
+6. 在 `finally` 中删除临时目录树。
 
-Use `throw` for assertions so GitHub Actions fails immediately.
+断言使用 `throw`，确保 GitHub Actions 立即失败。
 
-- [ ] **Step 5: Generate GitHub staging trees**
+- [ ] **步骤 5：生成 GitHub staging 目录树**
 
-Extend `buildReleasePackages()` after npm generation:
+在 npm 包生成后扩展 `buildReleasePackages()`：
 
 ```js
 const bundleRoot = path.join(outputRoot, "github", target.packageDir);
@@ -1761,13 +1725,11 @@ await fs.promises.copyFile(
 );
 ```
 
-Write `README.txt` with `./install.sh --all` or `.\install.ps1 -All`.
+在 `README.txt` 中写入 `./install.sh --all` 或 `.\install.ps1 -All`。
 
-- [ ] **Step 6: Add archive creation**
+- [ ] **步骤 6：添加压缩包生成脚本**
 
-Create `scripts/create-release-archives.sh`. Read the version with
-`node -p "require('./fastmoss/package.json').version"`, recreate
-`dist/publish/github`, and emit exactly four `.tar.gz` files and one `.zip`:
+新建 `scripts/create-release-archives.sh`。使用 `node -p "require('./fastmoss/package.json').version"` 读取版本，重新创建 `dist/publish/github`，并严格生成 4 个 `.tar.gz` 和 1 个 `.zip`：
 
 ```text
 fastmoss-v0.1.6-darwin-amd64.tar.gz
@@ -1777,14 +1739,13 @@ fastmoss-v0.1.6-linux-arm64.tar.gz
 fastmoss-v0.1.6-windows-amd64.zip
 ```
 
-Use `tar -C <bundle> -czf` for Unix and run `zip -qr` from inside the Windows
-bundle. Reject missing or empty output.
+Unix 使用 `tar -C <bundle> -czf`，Windows bundle 内运行 `zip -qr`。输出缺失或为空时失败。
 
-Run `chmod +x scripts/create-release-archives.sh`.
+运行 `chmod +x scripts/create-release-archives.sh`。
 
-- [ ] **Step 7: Run cross-channel packaging checks**
+- [ ] **步骤 7：运行跨渠道打包检查**
 
-Run:
+运行：
 
 ```bash
 node --test test/release-packages.test.js test/install-sh.test.js
@@ -1794,28 +1755,26 @@ bash scripts/create-release-archives.sh
 find dist/publish/github -maxdepth 1 -type f -print
 ```
 
-Expected: all tests PASS and five archives exist. Run
-`pwsh -File test/install-powershell.ps1` when PowerShell is available;
-Windows CI is the required platform verification.
+预期：所有测试通过并生成 5 个压缩包。存在 PowerShell 时运行 `pwsh -File test/install-powershell.ps1`；Windows CI 是必需的平台验证。
 
-- [ ] **Step 8: Commit Windows and GitHub bundle support**
+- [ ] **步骤 8：提交 Windows 与 GitHub bundle 支持**
 
 ```bash
 git add install.ps1 test/install-powershell.ps1 scripts/build-release-packages.js scripts/create-release-archives.sh test/release-packages.test.js
 git commit -m "feat: add Windows installer and GitHub offline bundles"
 ```
 
-## Task 7: Prove npm Installation Against An Isolated Registry
+## 任务 7：使用隔离 registry 验证 npm 安装
 
-**Files:**
-- Modify: `package.json`
-- Create: `package-lock.json`
-- Create: `test/npm-install.integration.js`
-- Modify: `fastmoss/test/package.test.js`
+**文件：**
+- 修改：`package.json`
+- 新建：`package-lock.json`
+- 新建：`test/npm-install.integration.js`
+- 修改：`fastmoss/test/package.test.js`
 
-- [ ] **Step 1: Pin Verdaccio and create the lockfile**
+- [ ] **步骤 1：固定 Verdaccio 版本并创建 lockfile**
 
-Add:
+添加：
 
 ```json
 {
@@ -1825,26 +1784,25 @@ Add:
 }
 ```
 
-Run: `npm install --package-lock-only`
+运行：`npm install --package-lock-only`
 
-Expected: lockfile pins Verdaccio 6.8.0; published packages gain no dependency.
+预期：lockfile 固定 Verdaccio 6.8.0；发布包不增加任何依赖。
 
-- [ ] **Step 2: Write the isolated-registry integration script**
+- [ ] **步骤 2：编写隔离 registry 集成脚本**
 
-Create `test/npm-install.integration.js` as a standalone Node script. It must:
+新建独立 Node 脚本 `test/npm-install.integration.js`。它必须：
 
-1. Reserve an available localhost port.
-2. Create a temporary Verdaccio config with no uplinks.
-3. Start `node_modules/.bin/verdaccio` and poll `/-/ping` until it returns 200
-   or a 10-second deadline expires.
-4. Register user `ci` through `PUT /-/user/org.couchdb.user:ci`.
-5. Write the returned token and local registry to a temporary `.npmrc`.
-6. Run `npm run build:release`.
-7. Publish all platform directories, `fastmoss/`, then generated Skill.
-8. Test CLI-only and Skill-only paths with separate prefixes and homes.
-9. Stop Verdaccio and remove temporary files in `finally`.
+1. 预留一个可用 localhost 端口。
+2. 创建不含 uplink 的临时 Verdaccio 配置。
+3. 启动 `node_modules/.bin/verdaccio`，轮询 `/-/ping`，直到返回 200 或超过 10 秒期限。
+4. 通过 `PUT /-/user/org.couchdb.user:ci` 注册用户 `ci`。
+5. 将返回的 token 和本地 registry 写入临时 `.npmrc`。
+6. 运行 `npm run build:release`。
+7. 依次发布所有平台目录、`fastmoss/` 和生成的 Skill。
+8. 使用相互独立的 prefix 与 home 测试仅 CLI 和仅 Skill 两条路径。
+9. 在 `finally` 中停止 Verdaccio 并删除临时文件。
 
-Generate the registry policy with runtime paths:
+使用运行时路径生成 registry 策略：
 
 ```js
 const verdaccioConfig = [
@@ -1874,7 +1832,7 @@ const verdaccioConfig = [
 await fs.promises.writeFile(configPath, verdaccioConfig);
 ```
 
-After user creation returns `{ token }`, write:
+创建用户并返回 `{ token }` 后，写入：
 
 ```js
 const userResponse = await fetch(
@@ -1905,7 +1863,7 @@ const npmrc = [
 await fs.promises.writeFile(npmrcPath, npmrc);
 ```
 
-Set this environment for npm children:
+为 npm 子进程设置以下环境：
 
 ```js
 const isolatedEnv = {
@@ -1921,7 +1879,7 @@ const isolatedEnv = {
 };
 ```
 
-CLI-only assertions:
+仅 CLI 路径断言：
 
 ```js
 run("npm", ["install", "-g", "@fastmoss/cli@latest"], {
@@ -1938,7 +1896,7 @@ assert.equal(versionResult.stdout.trim(), mainPackage.version);
 assert.equal(fs.existsSync(path.join(cliHome, ".agents", "skills")), false);
 ```
 
-Skill-only assertions using the documented command:
+使用文档命令执行仅 Skill 路径断言：
 
 ```js
 const npxCommand = process.platform === "win32" ? "npx.cmd" : "npx";
@@ -1967,21 +1925,20 @@ const unexpectedCLI = process.platform === "win32"
 assert.equal(fs.existsSync(unexpectedCLI), false);
 ```
 
-- [ ] **Step 3: Run isolated installation**
+- [ ] **步骤 3：运行隔离安装**
 
-Run:
+运行：
 
 ```bash
 npm ci
 npm run test:integration
 ```
 
-Expected: PASS. Verdaccio sees only localhost requests and cannot proxy.
+预期：通过。Verdaccio 只收到 localhost 请求，并且无法代理外部 registry。
 
-- [ ] **Step 4: Add static network-regression assertions**
+- [ ] **步骤 4：添加静态网络回归断言**
 
-Extend `fastmoss/test/package.test.js` to scan only `package.json`, `bin/`, and
-`lib/` and reject:
+扩展 `fastmoss/test/package.test.js`，只扫描 `package.json`、`bin/` 和 `lib/`，并拒绝：
 
 ```js
 const forbidden = [
@@ -1992,11 +1949,11 @@ const forbidden = [
 ];
 ```
 
-README links to the separate GitHub channel are allowed.
+README 中指向独立 GitHub 渠道的链接允许存在。
 
-- [ ] **Step 5: Run all npm-channel checks**
+- [ ] **步骤 5：运行全部 npm 渠道检查**
 
-Run:
+运行：
 
 ```bash
 npm test
@@ -2005,37 +1962,35 @@ npm run pack:release
 npm run test:integration
 ```
 
-Expected: all commands PASS and seven npm tarballs are generated.
+预期：所有命令通过，并生成 7 个 npm tarball。
 
-- [ ] **Step 6: Commit isolated npm verification**
+- [ ] **步骤 6：提交隔离 npm 验证**
 
 ```bash
 git add package.json package-lock.json test/npm-install.integration.js fastmoss/test/package.test.js
 git commit -m "test: verify npm installs without GitHub access"
 ```
 
-## Task 8: Update The Canonical Skill And Installation Documentation
+## 任务 8：更新唯一来源的 Skill 与安装文档
 
-**Files:**
-- Modify: `skills/fastmoss-cli/SKILL.md`
-- Modify: `skills/fastmoss-cli/references/cli.md`
-- Modify: `README.md`
-- Modify: `README.zh-CN.md`
-- Modify: `fastmoss/README.md`
-- Modify: `fastmoss/README.zh-CN.md`
-- Modify: `fastmoss-skill/README.md`
-- Modify: `fastmoss-skill/README.zh-CN.md`
-- Modify: `test/release-packages.test.js`
+**文件：**
+- 修改：`skills/fastmoss-cli/SKILL.md`
+- 修改：`skills/fastmoss-cli/references/cli.md`
+- 修改：`README.md`
+- 修改：`README.zh-CN.md`
+- 修改：`fastmoss/README.md`
+- 修改：`fastmoss/README.zh-CN.md`
+- 修改：`fastmoss-skill/README.md`
+- 修改：`fastmoss-skill/README.zh-CN.md`
+- 修改：`test/release-packages.test.js`
 
-- [ ] **Step 1: Invoke Skill authoring guidance**
+- [ ] **步骤 1：调用 Skill 编写指导**
 
-Use `skill-creator` and `superpowers:writing-skills` before editing the
-deployed Skill. Preserve all tool-selection and tool-calling behavior; only
-installation and startup wording is in scope.
+编辑已部署 Skill 前使用 `skill-creator` 和 `superpowers:writing-skills`。保留所有工具选择与工具调用行为；本任务只修改安装和启动说明。
 
-- [ ] **Step 2: Add a failing documentation-contract test**
+- [ ] **步骤 2：添加预期失败的文档契约测试**
 
-Add to `test/release-packages.test.js`:
+在 `test/release-packages.test.js` 中添加：
 
 ```js
 test("active docs use independent npm commands and no old Skill installer", async () => {
@@ -2060,16 +2015,15 @@ test("active docs use independent npm commands and no old Skill installer", asyn
 });
 ```
 
-- [ ] **Step 3: Verify documentation test fails**
+- [ ] **步骤 3：确认文档测试失败**
 
-Run: `node --test test/release-packages.test.js`
+运行：`node --test test/release-packages.test.js`
 
-Expected: FAIL on the old `skills add`, `fastmoss-install-skill`, and
-`--allow-scripts` instructions.
+预期：因旧的 `skills add`、`fastmoss-install-skill` 和 `--allow-scripts` 说明而失败。
 
-- [ ] **Step 4: Update canonical Skill startup**
+- [ ] **步骤 4：更新唯一来源 Skill 的启动检查**
 
-In `skills/fastmoss-cli/SKILL.md`, replace the missing/update CLI block with:
+在 `skills/fastmoss-cli/SKILL.md` 中，将 CLI 缺失/升级段落替换为：
 
 ````markdown
 If the FastMoss CLI is not installed, the command is not found, or the user
@@ -2083,12 +2037,11 @@ This installs only the CLI. Do not reinstall this Skill unless the user also
 asks to install or update the Agent Skill.
 ````
 
-In `skills/fastmoss-cli/references/cli.md`, use the same exact command and
-state that the CLI package does not install Agent Skills.
+在 `skills/fastmoss-cli/references/cli.md` 中使用完全相同的命令，并声明 CLI 包不会安装 Agent Skill。
 
-- [ ] **Step 5: Rewrite installation sections in all four product READMEs**
+- [ ] **步骤 5：重写四份产品 README 的安装章节**
 
-Use this first English installation block:
+英文文档首先使用以下安装区块：
 
 ````markdown
 Install only the CLI:
@@ -2104,21 +2057,15 @@ npx -y @fastmoss/skill@latest
 ```
 ````
 
-The Chinese equivalent uses “只安装 CLI” and “只安装 Agent Skill”. Add the
-GitHub clone commands and Windows switches from the design spec. Replace the
-old Binary Download/Cache sections with a short npm package architecture
-section: npm installs one matching platform package and never downloads from
-GitHub. Keep API key, command reference, and tool catalog content unchanged.
+中文文档对应使用“只安装 CLI”和“只安装 Agent Skill”。加入设计规范中的 GitHub clone 命令和 Windows 参数。将旧的 Binary Download/Cache 章节替换为简短的 npm 包架构说明：npm 只安装一个匹配的平台包，绝不从 GitHub 下载。API Key、命令参考和工具目录内容保持不变。
 
-- [ ] **Step 6: Finalize standalone Skill package READMEs**
+- [ ] **步骤 6：完善独立 Skill 包 README**
 
-Document default `all`, all four `--agent` values, `FASTMOSS_SKILL_DIR`,
-`uninstall`, current-Agent handoff, and the possible next-session limitation.
-Do not imply that Skill installation installs CLI.
+记录默认值 `all`、四种 `--agent` 值、`FASTMOSS_SKILL_DIR`、`uninstall`、当前 Agent handoff，以及可能需要下一会话生效的限制。不得暗示安装 Skill 会安装 CLI。
 
-- [ ] **Step 7: Run Skill and docs verification**
+- [ ] **步骤 7：运行 Skill 与文档验证**
 
-Run:
+运行：
 
 ```bash
 npm test
@@ -2128,24 +2075,24 @@ rg -n "npx skills add FastMoss/cli|fastmoss-install-skill|--allow-scripts=@fastm
   fastmoss-skill/README.md fastmoss-skill/README.zh-CN.md skills
 ```
 
-Expected: tests PASS and `rg` returns no matches.
+预期：测试通过，`rg` 不返回任何匹配。
 
-- [ ] **Step 8: Commit docs and canonical Skill**
+- [ ] **步骤 8：提交文档与唯一来源 Skill**
 
 ```bash
 git add README.md README.zh-CN.md fastmoss/README.md fastmoss/README.zh-CN.md fastmoss-skill/README.md fastmoss-skill/README.zh-CN.md skills/fastmoss-cli test/release-packages.test.js
 git commit -m "docs: document independent CLI and Skill installs"
 ```
 
-## Task 9: Replace The Release Workflow
+## 任务 9：替换发布工作流
 
-**Files:**
-- Replace: `.github/workflows/release.yml`
-- Modify: `test/release-packages.test.js`
+**文件：**
+- 替换：`.github/workflows/release.yml`
+- 修改：`test/release-packages.test.js`
 
-- [ ] **Step 1: Add failing workflow assertions**
+- [ ] **步骤 1：添加预期失败的工作流断言**
 
-Add:
+添加：
 
 ```js
 test("release workflow validates before independent channel publishing", async () => {
@@ -2169,34 +2116,22 @@ test("release workflow validates before independent channel publishing", async (
 });
 ```
 
-- [ ] **Step 2: Verify workflow test fails**
+- [ ] **步骤 2：确认工作流测试失败**
 
-Run: `node --test test/release-packages.test.js`
+运行：`node --test test/release-packages.test.js`
 
-Expected: FAIL because the current workflow publishes GitHub first and
-publishes directly from `fastmoss/`.
+预期：失败，因为当前工作流先发布 GitHub，并直接从 `fastmoss/` 发布 npm 包。
 
-- [ ] **Step 3: Replace workflow with validation, build, and independent publishers**
+- [ ] **步骤 3：将工作流替换为验证、构建和独立发布任务**
 
-Keep the `v*` tag trigger. Add required `release_tag` input for
-`workflow_dispatch`. Define one workflow-level `RELEASE_TAG` expression that
-uses `inputs.release_tag` for manual runs and `github.ref_name` for tag pushes.
-Every checkout in `test`, `build-release`, and `publish-github` must set
-`ref: ${{ env.RELEASE_TAG }}`. Implement:
+保留 `v*` tag 触发器。为 `workflow_dispatch` 添加必填的 `release_tag` 输入。定义工作流级 `RELEASE_TAG` 表达式：手动运行时使用 `inputs.release_tag`，tag push 时使用 `github.ref_name`。`test`、`build-release` 和 `publish-github` 中的每次 checkout 都必须设置 `ref: ${{ env.RELEASE_TAG }}`。实现以下任务：
 
-1. `test`: matrix of `ubuntu-latest`, `macos-latest`, and `windows-latest`;
-   checkout, Node 20, `npm ci`, `npm test`, and `npm run test:integration`.
-   On Windows also run `test/install-powershell.ps1`.
-2. `build-release`: needs `test`, runs Ubuntu, verifies
-   `fastmoss/package.json` equals selected tag, runs build, pack, and archive
-   commands, then uploads `dist/publish`.
-3. `publish-npm`: needs `build-release`, downloads artifact, configures
-   npmjs, and publishes seven tarballs in manifest order.
-4. `publish-github`: needs `build-release`, checks out the tagged repository,
-   downloads the artifact, and publishes raw `release-assets/*` plus
-   `dist/publish/github/*`.
+1. `test`：矩阵包含 `ubuntu-latest`、`macos-latest` 和 `windows-latest`；执行 checkout、Node 20、`npm ci`、`npm test` 和 `npm run test:integration`。Windows 还要运行 `test/install-powershell.ps1`。
+2. `build-release`：依赖 `test`，在 Ubuntu 上运行；验证 `fastmoss/package.json` 等于所选 tag，执行构建、打包和压缩命令，再上传 `dist/publish`。
+3. `publish-npm`：依赖 `build-release`，下载 artifact，配置 npmjs，并按 manifest 顺序发布 7 个 tarball。
+4. `publish-github`：依赖 `build-release`，checkout 对应 tag，下载 artifact，并发布原始 `release-assets/*` 与 `dist/publish/github/*`。
 
-Use the generated manifest for npm:
+npm 发布使用生成的 manifest：
 
 ```bash
 node - <<'NODE'
@@ -2213,12 +2148,11 @@ for (const entry of manifest) {
 NODE
 ```
 
-`publish-npm` and `publish-github` depend only on `build-release`, never on
-each other. Set `NODE_AUTH_TOKEN` only in `publish-npm`.
+`publish-npm` 和 `publish-github` 只依赖 `build-release`，彼此之间绝不依赖。仅在 `publish-npm` 中设置 `NODE_AUTH_TOKEN`。
 
-- [ ] **Step 4: Run local release checks**
+- [ ] **步骤 4：运行本地发布检查**
 
-Run:
+运行：
 
 ```bash
 npm test
@@ -2228,24 +2162,24 @@ bash scripts/create-release-archives.sh
 git diff --check
 ```
 
-Expected: all checks PASS and YAML has no whitespace errors.
+预期：所有检查通过，YAML 不存在空白字符错误。
 
-- [ ] **Step 5: Commit workflow**
+- [ ] **步骤 5：提交工作流**
 
 ```bash
 git add .github/workflows/release.yml test/release-packages.test.js
 git commit -m "ci: publish npm and GitHub channels independently"
 ```
 
-## Task 10: Full Verification And Review
+## 任务 10：完整验证与审查
 
-**Files:**
-- Verify all files changed by Tasks 1-9.
-- Modify only files required by failures found here.
+**文件：**
+- 验证任务 1-9 修改的全部文件。
+- 只修改本任务发现的失败所必需的文件。
 
-- [ ] **Step 1: Run complete local verification**
+- [ ] **步骤 1：运行完整本地验证**
 
-Run:
+运行：
 
 ```bash
 npm ci
@@ -2256,11 +2190,11 @@ npm run pack:release
 bash scripts/create-release-archives.sh
 ```
 
-Expected: every command exits 0.
+预期：每条命令都以 0 退出。
 
-- [ ] **Step 2: Inspect release payload boundaries**
+- [ ] **步骤 2：检查发布载荷边界**
 
-Run:
+运行：
 
 ```bash
 node -e 'const m=require("./dist/publish/npm/manifest.json"); console.log(m.map(x => `${x.kind} ${x.name} ${x.version} ${x.file}`).join("\n"))'
@@ -2269,16 +2203,16 @@ npm pack fastmoss --dry-run --json
 npm pack dist/npm/skill --dry-run --json
 ```
 
-Expected:
+预期：
 
-- Seven npm entries: five platform, one CLI, one Skill.
-- Five GitHub archives.
-- CLI tarball has no Skill, `postinstall`, or downloader.
-- Skill tarball has canonical Skill but no CLI binary or dependency.
+- 7 个 npm 条目：5 个平台包、1 个 CLI 包、1 个 Skill 包。
+- 5 个 GitHub 压缩包。
+- CLI tarball 不包含 Skill、`postinstall` 或下载器。
+- Skill tarball 包含唯一来源的 Skill，但不包含 CLI 二进制或 CLI 依赖。
 
-- [ ] **Step 3: Scan for forbidden active behavior**
+- [ ] **步骤 3：扫描被禁止的现行行为**
 
-Run:
+运行：
 
 ```bash
 rg -n "github\.com/FastMoss/cli/releases/download|node:http|node:https|FASTMOSS_DOWNLOAD_BASE_URL|FASTMOSS_SKIP_DOWNLOAD" \
@@ -2288,12 +2222,11 @@ rg -n "fastmoss-install-skill|npx skills add FastMoss/cli|--allow-scripts=@fastm
   fastmoss-skill/README.md fastmoss-skill/README.zh-CN.md skills
 ```
 
-Expected: neither command matches. Tests containing guard strings and
-historical specs/plans are intentionally excluded.
+预期：两条命令都没有匹配。包含防回归字符串的测试以及历史规范/计划被有意排除。
 
-- [ ] **Step 4: Verify source uniqueness and repository hygiene**
+- [ ] **步骤 4：验证源码唯一性和仓库整洁性**
 
-Run:
+运行：
 
 ```bash
 test ! -d fastmoss/skills
@@ -2302,21 +2235,17 @@ git diff --check
 git status --short
 ```
 
-Expected: only intended implementation changes are present, `dist/` is
-ignored, and there is one editable Skill tree.
+预期：只存在预期的实现改动，`dist/` 已被忽略，并且只有一份可编辑 Skill 目录树。
 
-- [ ] **Step 5: Request code review**
+- [ ] **步骤 5：请求代码审查**
 
-Invoke `superpowers:requesting-code-review`. Review against all eight design
-acceptance criteria, exact platform versions, rollback safety, and accidental
-network fallback.
+调用 `superpowers:requesting-code-review`。对照设计中的 8 项验收标准、平台精确版本、回滚安全性和意外网络兜底进行审查。
 
-- [ ] **Step 6: Fix review findings with TDD**
+- [ ] **步骤 6：使用 TDD 修复审查发现**
 
-For each accepted finding, add or update a failing test first, verify the
-failure, make the smallest implementation change, and rerun Step 1.
+对每条接受的发现，先新增或更新一个失败测试并确认其失败，再实施最小改动，最后重新运行步骤 1。
 
-- [ ] **Step 7: Commit review fixes when present**
+- [ ] **步骤 7：存在审查修复时提交**
 
 ```bash
 git add -u
@@ -2324,10 +2253,8 @@ git add .github fastmoss fastmoss-skill install.sh install.ps1 package.json pack
 git commit -m "fix: address installation redesign review"
 ```
 
-Skip this commit when review requires no code changes. Never add `dist/`.
+审查不需要代码改动时跳过该提交。绝不添加 `dist/`。
 
-- [ ] **Step 8: Finish the development branch**
+- [ ] **步骤 8：完成开发分支**
 
-Invoke `superpowers:verification-before-completion`, then
-`superpowers:finishing-a-development-branch`. Report exact test commands,
-results, branch name, and merge/PR choices.
+先调用 `superpowers:verification-before-completion`，再调用 `superpowers:finishing-a-development-branch`。报告准确的测试命令、结果、分支名称以及合并/PR 选项。
