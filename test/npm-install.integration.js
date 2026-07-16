@@ -8,9 +8,10 @@ const { spawn, spawnSync } = require("node:child_process");
 const repoRoot = path.join(__dirname, "..");
 const mainPackage = require("../fastmoss/package.json");
 const { PLATFORM_TARGETS } = require("../fastmoss/lib/targets");
-const { npmCommand, spawnOptionsForCommand } = require("../scripts/npm-command");
+const { npmCommand, spawnOptionsForCommand, verdaccioCommand } = require("../scripts/npm-command");
 
-function run(command, args, { env = process.env, cwd = repoRoot } = {}) {
+function run(command, args, { env = process.env, cwd = repoRoot, label = command } = {}) {
+  process.stdout.write(`Integration stage: ${label}\n`);
   const result = spawnSync(command, args, {
     cwd,
     env,
@@ -47,6 +48,31 @@ async function waitForRegistry(url, child, logs) {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   throw new Error(`Verdaccio did not start within 10 seconds\n${logs()}`);
+}
+
+function waitForExit(child, timeout) {
+  if (child.exitCode !== null) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      child.off("exit", onExit);
+      resolve(false);
+    }, timeout);
+    function onExit() {
+      clearTimeout(timer);
+      resolve(true);
+    }
+    child.once("exit", onExit);
+  });
+}
+
+async function stopRegistry(child) {
+  if (child.exitCode !== null) return;
+  const stopped = waitForExit(child, 2000);
+  child.kill();
+  if (await stopped) return;
+  const forced = waitForExit(child, 5000);
+  child.kill("SIGKILL");
+  if (!(await forced)) throw new Error("Verdaccio did not stop after forced termination");
 }
 
 async function main() {
@@ -86,19 +112,19 @@ async function main() {
     ].join("\n");
     await fs.promises.writeFile(configPath, config);
 
-    const verdaccioBin = path.join(
-      repoRoot,
-      "node_modules",
-      ".bin",
-      process.platform === "win32" ? "verdaccio.cmd" : "verdaccio",
-    );
+    const verdaccioProcess = verdaccioCommand([
+      "--config",
+      configPath,
+      "--listen",
+      `127.0.0.1:${port}`,
+    ]);
+    process.stdout.write("Integration stage: start isolated registry\n");
     verdaccio = spawn(
-      verdaccioBin,
-      ["--config", configPath, "--listen", `127.0.0.1:${port}`],
+      verdaccioProcess.command,
+      verdaccioProcess.args,
       {
         cwd: repoRoot,
         stdio: ["ignore", "pipe", "pipe"],
-        ...spawnOptionsForCommand(verdaccioBin),
       },
     );
     verdaccio.stdout.on("data", (chunk) => {
@@ -160,16 +186,17 @@ async function main() {
           "--access",
           "public",
         ],
-        { env: isolatedEnv },
+        { env: isolatedEnv, label: `publish ${target.packageName}` },
       );
     }
     run(npmCommand(), ["publish", path.join(repoRoot, "fastmoss"), "--access", "public"], {
       env: isolatedEnv,
+      label: "publish @fastmoss/cli",
     });
     run(
       npmCommand(),
       ["publish", path.join(repoRoot, "fastmoss-skill"), "--access", "public"],
-      { env: isolatedEnv },
+      { env: isolatedEnv, label: "publish @fastmoss/skill" },
     );
 
     const cliHome = path.join(tempRoot, "cli-home");
@@ -183,14 +210,21 @@ async function main() {
         USERPROFILE: cliHome,
         npm_config_prefix: cliPrefix,
       },
+      label: "install @fastmoss/cli",
     });
     const fastmossCommand =
       process.platform === "win32"
         ? path.join(cliPrefix, "fastmoss.cmd")
         : path.join(cliPrefix, "bin", "fastmoss");
-    const versionResult = run(fastmossCommand, ["--version"], { env: isolatedEnv });
+    const versionResult = run(fastmossCommand, ["--version"], {
+      env: isolatedEnv,
+      label: "run fastmoss --version",
+    });
     assert.equal(versionResult.stdout.trim(), mainPackage.version);
-    const helpResult = run(fastmossCommand, ["help"], { env: isolatedEnv });
+    const helpResult = run(fastmossCommand, ["help"], {
+      env: isolatedEnv,
+      label: "run fastmoss help",
+    });
     assert.match(helpResult.stdout, /fastmoss|Usage|Commands/i);
     for (const directory of [".codex", ".claude", ".agents"]) {
       assert.equal(fs.existsSync(path.join(cliHome, directory, "skills")), false);
@@ -208,6 +242,7 @@ async function main() {
         USERPROFILE: skillHome,
         npm_config_prefix: skillPrefix,
       },
+      label: "run @fastmoss/skill",
     });
     for (const directory of [".codex", ".claude", ".agents"]) {
       assert.equal(
@@ -226,8 +261,7 @@ async function main() {
     throw error;
   } finally {
     if (verdaccio) {
-      verdaccio.kill("SIGTERM");
-      await new Promise((resolve) => verdaccio.once("exit", resolve));
+      await stopRegistry(verdaccio);
     }
     await fs.promises.rm(tempRoot, { recursive: true, force: true });
   }
