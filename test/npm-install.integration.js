@@ -164,6 +164,8 @@ async function main() {
 
     const cliHome = path.join(tempRoot, "cli-home");
     const cliPrefix = path.join(tempRoot, "cli-prefix");
+    await fs.promises.mkdir(cliHome, { recursive: true });
+    await fs.promises.mkdir(cliPrefix, { recursive: true });
     run("npm", ["install", "-g", "@fastmoss/cli@latest"], {
       env: {
         ...isolatedEnv,
@@ -186,6 +188,8 @@ async function main() {
 
     const skillHome = path.join(tempRoot, "skill-home");
     const skillPrefix = path.join(tempRoot, "skill-prefix");
+    await fs.promises.mkdir(skillHome, { recursive: true });
+    await fs.promises.mkdir(skillPrefix, { recursive: true });
     const npxCommand = process.platform === "win32" ? "npx.cmd" : "npx";
     const skillResult = run(npxCommand, ["-y", "@fastmoss/skill@latest"], {
       env: {
