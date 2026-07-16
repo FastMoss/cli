@@ -294,19 +294,22 @@ test("invalid JSON manifest is treated as unmanaged", async () => {
 test("--help and --version do not write to user directories", async () => {
   const tempHome = await fs.promises.mkdtemp(path.join(os.tmpdir(), "fastmoss-skill-home-"));
   const packageRoot = path.join(__dirname, "..");
-  const packageJSONPath = path.join(packageRoot, "package.json");
-  const originalPackageJSON = fs.existsSync(packageJSONPath)
-    ? await fs.promises.readFile(packageJSONPath, "utf8")
-    : null;
+  const tempPackageRoot = path.join(tempHome, "package");
   try {
+    await fs.promises.cp(path.join(packageRoot, "bin"), path.join(tempPackageRoot, "bin"), {
+      recursive: true,
+    });
+    await fs.promises.cp(path.join(packageRoot, "lib"), path.join(tempPackageRoot, "lib"), {
+      recursive: true,
+    });
     await fs.promises.writeFile(
-      packageJSONPath,
+      path.join(tempPackageRoot, "package.json"),
       `${JSON.stringify({ version: "1.2.3" })}\n`,
     );
     for (const arg of ["--help", "--version"]) {
       const result = spawnSync(
         process.execPath,
-        [path.join(packageRoot, "bin", "fastmoss-skill.js"), arg],
+        [path.join(tempPackageRoot, "bin", "fastmoss-skill.js"), arg],
         {
           env: { ...process.env, HOME: tempHome },
           encoding: "utf8",
@@ -318,11 +321,6 @@ test("--help and --version do not write to user directories", async () => {
     assert.equal(fs.existsSync(path.join(tempHome, ".claude")), false);
     assert.equal(fs.existsSync(path.join(tempHome, ".agents")), false);
   } finally {
-    if (originalPackageJSON === null) {
-      await fs.promises.rm(packageJSONPath, { force: true });
-    } else {
-      await fs.promises.writeFile(packageJSONPath, originalPackageJSON);
-    }
     await fs.promises.rm(tempHome, { recursive: true, force: true });
   }
 });
