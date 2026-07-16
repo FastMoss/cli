@@ -1,7 +1,19 @@
 {
   "name": "@fastmoss/cli",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "FastMoss CLI for npm and npx",
+  "keywords": [
+    "fastmoss",
+    "tiktok-shop",
+    "ecommerce-research",
+    "product-research",
+    "creator-analytics",
+    "shop-analytics",
+    "advertising-analytics",
+    "market-intelligence",
+    "mcp",
+    "ai-agent"
+  ],
   "license": "UNLICENSED",
   "private": false,
   "bin": {
@@ -17,11 +29,11 @@
     "test": "node --test ./test/*.test.js"
   },
   "optionalDependencies": {
-    "@fastmoss/cli-darwin-amd64": "0.1.13",
-    "@fastmoss/cli-darwin-arm64": "0.1.13",
-    "@fastmoss/cli-linux-amd64": "0.1.13",
-    "@fastmoss/cli-linux-arm64": "0.1.13",
-    "@fastmoss/cli-windows-amd64": "0.1.13"
+    "@fastmoss/cli-darwin-amd64": "0.1.14",
+    "@fastmoss/cli-darwin-arm64": "0.1.14",
+    "@fastmoss/cli-linux-amd64": "0.1.14",
+    "@fastmoss/cli-linux-arm64": "0.1.14",
+    "@fastmoss/cli-windows-amd64": "0.1.14"
   },
   "engines": {
     "node": ">=18"

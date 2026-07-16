@@ -1,6 +1,6 @@
 {
   "name": "@fastmoss/cli-linux-amd64",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "FastMoss CLI binary for linux/x64",
   "license": "UNLICENSED",
   "private": false,

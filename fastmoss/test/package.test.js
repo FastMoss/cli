@@ -27,6 +27,21 @@ test("all optional dependencies are exact and match the main version", () => {
   assert.deepEqual(packageJSON.optionalDependencies, expected);
 });
 
+test("CLI package includes discovery keywords", () => {
+  assert.deepEqual(packageJSON.keywords, [
+    "fastmoss",
+    "tiktok-shop",
+    "ecommerce-research",
+    "product-research",
+    "creator-analytics",
+    "shop-analytics",
+    "advertising-analytics",
+    "market-intelligence",
+    "mcp",
+    "ai-agent",
+  ]);
+});
+
 test("runtime source contains no downloader or GitHub release fallback", () => {
   const content = [
     "package.json",
