@@ -1,6 +1,6 @@
 {
   "name": "@fastmoss/cli",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "FastMoss CLI for npm and npx",
   "license": "UNLICENSED",
   "private": false,
@@ -17,11 +17,11 @@
     "test": "node --test ./test/*.test.js"
   },
   "optionalDependencies": {
-    "@fastmoss/cli-darwin-amd64": "0.1.10",
-    "@fastmoss/cli-darwin-arm64": "0.1.10",
-    "@fastmoss/cli-linux-amd64": "0.1.10",
-    "@fastmoss/cli-linux-arm64": "0.1.10",
-    "@fastmoss/cli-windows-amd64": "0.1.10"
+    "@fastmoss/cli-darwin-amd64": "0.1.11",
+    "@fastmoss/cli-darwin-arm64": "0.1.11",
+    "@fastmoss/cli-linux-amd64": "0.1.11",
+    "@fastmoss/cli-linux-arm64": "0.1.11",
+    "@fastmoss/cli-windows-amd64": "0.1.11"
   },
   "engines": {
     "node": ">=18"
