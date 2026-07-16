@@ -2,8 +2,14 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const yaml = require("js-yaml");
 
 const workflowPath = path.join(__dirname, "..", ".github", "workflows", "release.yml");
+
+test("release workflow is valid YAML", () => {
+  const workflow = fs.readFileSync(workflowPath, "utf8");
+  assert.doesNotThrow(() => yaml.load(workflow));
+});
 
 test("release workflow validates all operating systems before publishing", () => {
   const workflow = fs.readFileSync(workflowPath, "utf8");

@@ -9,6 +9,7 @@
     "archive:release": "bash scripts/create_release_archives.sh"
   },
   "devDependencies": {
+    "js-yaml": "4.1.1",
     "verdaccio": "6.8.0"
   },
   "engines": {

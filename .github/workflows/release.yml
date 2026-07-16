@@ -135,7 +135,7 @@ jobs:
             );
             if (result.status !== 0) process.exit(result.status || 1);
           }
-NODE
+          NODE
 
   publish-github:
     needs: build-release
