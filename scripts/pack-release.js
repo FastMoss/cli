@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { PLATFORM_TARGETS } = require("../fastmoss/lib/targets");
+const { npmCommand, spawnOptionsForCommand } = require("./npm-command");
 
 const repoRoot = path.join(__dirname, "..");
 const version = require("../fastmoss/package.json").version;
@@ -24,10 +25,11 @@ fs.rmSync(destination, { recursive: true, force: true });
 fs.mkdirSync(destination, { recursive: true });
 
 const manifest = packages.map((entry) => {
+  const command = npmCommand();
   const result = spawnSync(
-    "npm",
+    command,
     ["pack", entry.root, "--json", "--pack-destination", destination],
-    { cwd: repoRoot, encoding: "utf8" },
+    { cwd: repoRoot, encoding: "utf8", ...spawnOptionsForCommand(command) },
   );
   if (result.status !== 0) {
     throw new Error(`npm pack failed for ${entry.name}: ${result.stderr}`);

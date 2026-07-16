@@ -4,6 +4,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { npmCommand, spawnOptionsForCommand } = require("../scripts/npm-command");
 
 const repoRoot = path.join(__dirname, "..");
 const { PLATFORM_TARGETS } = require("../fastmoss/lib/targets");
@@ -17,13 +18,14 @@ function run(command, args, options = {}) {
     cwd: repoRoot,
     encoding: "utf8",
     ...options,
+    ...spawnOptionsForCommand(command),
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   return result;
 }
 
 function packFiles(packageRoot) {
-  const result = run("npm", [
+  const result = run(npmCommand(), [
     "pack",
     path.join(repoRoot, packageRoot),
     "--dry-run",

@@ -8,9 +8,15 @@ const { spawn, spawnSync } = require("node:child_process");
 const repoRoot = path.join(__dirname, "..");
 const mainPackage = require("../fastmoss/package.json");
 const { PLATFORM_TARGETS } = require("../fastmoss/lib/targets");
+const { npmCommand, spawnOptionsForCommand } = require("../scripts/npm-command");
 
 function run(command, args, { env = process.env, cwd = repoRoot } = {}) {
-  const result = spawnSync(command, args, { cwd, env, encoding: "utf8" });
+  const result = spawnSync(command, args, {
+    cwd,
+    env,
+    encoding: "utf8",
+    ...spawnOptionsForCommand(command),
+  });
   assert.equal(
     result.status,
     0,
@@ -89,7 +95,11 @@ async function main() {
     verdaccio = spawn(
       verdaccioBin,
       ["--config", configPath, "--listen", `127.0.0.1:${port}`],
-      { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] },
+      {
+        cwd: repoRoot,
+        stdio: ["ignore", "pipe", "pipe"],
+        ...spawnOptionsForCommand(verdaccioBin),
+      },
     );
     verdaccio.stdout.on("data", (chunk) => {
       stdout += chunk;
@@ -143,7 +153,7 @@ async function main() {
 
     for (const target of Object.values(PLATFORM_TARGETS)) {
       run(
-        "npm",
+        npmCommand(),
         [
           "publish",
           path.join(repoRoot, "platform-packages", target.packageDir),
@@ -153,11 +163,11 @@ async function main() {
         { env: isolatedEnv },
       );
     }
-    run("npm", ["publish", path.join(repoRoot, "fastmoss"), "--access", "public"], {
+    run(npmCommand(), ["publish", path.join(repoRoot, "fastmoss"), "--access", "public"], {
       env: isolatedEnv,
     });
     run(
-      "npm",
+      npmCommand(),
       ["publish", path.join(repoRoot, "fastmoss-skill"), "--access", "public"],
       { env: isolatedEnv },
     );
@@ -166,7 +176,7 @@ async function main() {
     const cliPrefix = path.join(tempRoot, "cli-prefix");
     await fs.promises.mkdir(cliHome, { recursive: true });
     await fs.promises.mkdir(cliPrefix, { recursive: true });
-    run("npm", ["install", "-g", "@fastmoss/cli@latest"], {
+    run(npmCommand(), ["install", "-g", "@fastmoss/cli@latest"], {
       env: {
         ...isolatedEnv,
         HOME: cliHome,

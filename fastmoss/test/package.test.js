@@ -7,6 +7,8 @@ const { spawnSync } = require("node:child_process");
 const packageJSON = require("../package.json");
 const { PLATFORM_TARGETS } = require("../lib/targets");
 const packageRoot = path.join(__dirname, "..");
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmSpawnOptions = process.platform === "win32" ? { shell: true } : {};
 
 test("CLI package exposes only the fastmoss command", () => {
   assert.deepEqual(packageJSON.bin, { fastmoss: "bin/fastmoss.js" });
@@ -48,9 +50,10 @@ test("runtime source contains no downloader or GitHub release fallback", () => {
 });
 
 test("npm dry-run contains no Skill, Go binary, or lifecycle installer", () => {
-  const result = spawnSync("npm", ["pack", "--dry-run", "--json"], {
+  const result = spawnSync(npmCommand, ["pack", "--dry-run", "--json"], {
     cwd: packageRoot,
     encoding: "utf8",
+    ...npmSpawnOptions,
   });
   assert.equal(result.status, 0, result.stderr);
   const files = JSON.parse(result.stdout)[0].files.map((entry) => entry.path);
