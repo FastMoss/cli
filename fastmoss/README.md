@@ -71,10 +71,14 @@ cd cli
 ```bash
 fastmoss --version
 fastmoss help
-fastmoss login --api-key <your-api-key>
+fastmoss login
 fastmoss tools
 fastmoss call --tool <tool_name> --args '<json>' --output mcp
 ```
+
+`fastmoss login` securely reads the API key from a real terminal with echo
+disabled. The legacy `fastmoss login --api-key <value>` form remains available
+for existing trusted automation, but should not be used for interactive login.
 
 ## CLI Tool Catalog
 

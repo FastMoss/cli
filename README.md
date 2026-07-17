@@ -75,9 +75,13 @@ FastMoss tool calls require an API key and consume credits. Visit the [FastMoss 
 Typical setup:
 
 ```bash
-fastmoss login --api-key <your-api-key>
+fastmoss login
 fastmoss whoami
 ```
+
+`fastmoss login` securely reads the API key from a real terminal with echo
+disabled. The legacy `fastmoss login --api-key <value>` form remains available
+for existing trusted automation, but should not be used for interactive login.
 
 ## Commands
 

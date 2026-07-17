@@ -78,7 +78,9 @@ only when debugging raw RPC behavior.
 ## Error handling
 
 - If the CLI is missing, tell the user to run `npm install -g @fastmoss/cli`.
-- If auth is missing, tell the user to run `fastmoss login --api-key <api-key>`.
+- If auth is missing, use a PTY-backed `fastmoss login` with native secret input.
+  If the client cannot safely attach input to the active terminal, tell the user
+  to run `fastmoss login` in their own real terminal. Never pipe the API key.
 - If the tool name is unknown, check `references/tools.md` and the matching category file, then try `fastmoss tools --json` when live discovery is available.
 - If arguments are rejected, inspect the tool's parameter table in the matching category file or run `fastmoss tools --search <tool_name>`.
 - Do not invent unavailable fields. Ask a focused follow-up question when required parameters are missing.

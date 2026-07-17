@@ -22,7 +22,7 @@ If `fastmoss` is not found, ask the user to make sure the npm global bin directo
 ## Authentication and config
 
 ```bash
-fastmoss login --api-key <api-key>
+fastmoss login
 fastmoss logout
 fastmoss whoami
 fastmoss show config
@@ -32,6 +32,12 @@ fastmoss clear api-key
 fastmoss set language zh
 fastmoss set language en
 ```
+
+`fastmoss login` requires a real terminal and reads the API key with terminal
+echo disabled. Do not pipe the key through stdin. The legacy
+`fastmoss login --api-key <api-key>` form remains available for existing trusted
+automation, but it is not the recommended interactive login method because
+process arguments may be observable.
 
 `whoami`, `show config`, and `show auth` are safe first checks. Do not print or expose API keys in the final answer.
 

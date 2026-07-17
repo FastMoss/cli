@@ -75,9 +75,12 @@ FastMoss 工具调用需要 API Key，并会消耗 credits。请访问 [FastMoss
 常用配置：
 
 ```bash
-fastmoss login --api-key <your-api-key>
+fastmoss login
 fastmoss whoami
 ```
+
+`fastmoss login` 会在真实终端中关闭回显并安全读取 API Key。旧的
+`fastmoss login --api-key <value>` 仍兼容已有的可信自动化脚本，但不建议用于人工交互登录。
 
 ## 常用命令
 

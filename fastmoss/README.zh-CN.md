@@ -71,10 +71,13 @@ cd cli
 ```bash
 fastmoss --version
 fastmoss help
-fastmoss login --api-key <your-api-key>
+fastmoss login
 fastmoss tools
 fastmoss call --tool <tool_name> --args '<json>' --output mcp
 ```
+
+`fastmoss login` 会在真实终端中关闭回显并安全读取 API Key。旧的
+`fastmoss login --api-key <value>` 仍兼容已有的可信自动化脚本，但不建议用于人工交互登录。
 
 ## CLI 工具列表
 

@@ -41,18 +41,24 @@ Use the `fastmoss` command to discover and call FastMoss tools.
      whether to open the page. Do not block or defer the API key input action
      while they decide, and do not require that they visit the page before
      providing an existing or newly created key.
-   - In an interactive Agent client, trigger the client's native user-input or
-     secret-entry action with one field named `FastMoss API Key`. Ask only for
-     the key. Do not first ask the user to run a command themselves.
-   - After the user supplies the key, run `fastmoss login --api-key <provided-api-key>`
-     yourself, then continue with the requested work. Never repeat, display,
-     persist, or include the API key in tool arguments, logs, plans, or replies.
-   - If the current client cannot trigger user input or cannot execute the CLI,
-     ask the user to configure the key with the terminal fallback below:
+   - In an interactive Agent client that can attach secret input to an active
+     terminal, start `fastmoss login` in a PTY. When the CLI displays its API
+     key prompt, trigger the client's native secret-entry action with one field
+     named `FastMoss API Key` and write the result directly to that active
+     terminal. The CLI disables terminal echo while reading it.
+   - Never collect the key in ordinary chat, repeat or display it, place it in
+     command arguments, pipe it through stdin, or include it in tool arguments,
+     logs, plans, or replies.
+   - If the current client cannot securely attach user input to the active CLI
+     terminal, ask the user to complete login in their own real terminal:
 
    ```bash
-   fastmoss login --api-key <your-api-key>
+   fastmoss login
    ```
+
+   - `fastmoss login --api-key <value>` remains available only for compatibility
+     with existing trusted automation. Do not recommend it for interactive login
+     because command arguments may be observable by other processes or logs.
 
 ## Tool workflow
 
