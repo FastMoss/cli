@@ -6,6 +6,7 @@
 
 | Tool | Description |
 |---|---|
+| credit_usage_summary | Use after first-time login or authorization to verify auth and show the account's current FastMoss MCP credit usage summary. Takes no arguments. |
 | fastmoss_detail_url_examples | Use when the AI needs FastMoss detail-page links. Takes no arguments and returns product, creator, shop, video, and l... |
 | live_detail_analysis | Use when the user wants one live session info, creator, key performance, and category breakdown. |
 | live_products_list | Use when the user wants products sold in a live session or high GMV/units within this live session. Returns live_unit... |
@@ -18,6 +19,18 @@
 | video_search | Use when the user has no video_id and provides video keywords, title, or creator. Returns matching videos. |
 
 ## Tool details
+
+### credit_usage_summary
+
+Use after first-time login or authorization to verify auth and show the account's current FastMoss MCP credit usage summary. Takes no arguments.
+
+Example:
+
+```bash
+fastmoss call --tool credit_usage_summary --args '{}' --output mcp
+```
+
+Parameters: none documented.
 
 ### fastmoss_detail_url_examples
 
@@ -197,4 +210,3 @@ Parameters:
 | orderby | array | no | Sort options. |
 | page | integer | no | Page number. Default 1, max 10. |
 | pagesize | integer | no | Page size. Default 10, max 10. |
-

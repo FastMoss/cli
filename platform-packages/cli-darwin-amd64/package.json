@@ -1,6 +1,6 @@
 {
   "name": "@fastmoss/cli-darwin-amd64",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "FastMoss CLI binary for darwin/x64",
   "license": "UNLICENSED",
   "private": false,

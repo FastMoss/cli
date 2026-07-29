@@ -33,14 +33,42 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    fastmoss whoami
    ```
 
-3. If not logged in, obtain an API key and log in before calling any tools:
+3. If not logged in, use OAuth for normal interactive users before calling any
+   tools:
 
-   - If the user does not have an API key, offer (but do not open or require)
-     [FastMoss Developer Platform](https://developers.fastmoss.com/mcp/overview.html)
-     as an optional place to sign in and create an MCP API key. The user chooses
-     whether to open the page. Do not block or defer the API key input action
-     while they decide, and do not require that they visit the page before
-     providing an existing or newly created key.
+   ```bash
+   fastmoss login --oauth
+   ```
+
+   OAuth is the recommended login method for agent clients and human-operated
+   terminals because the browser handles FastMoss account login, API key
+   selection or creation, consent, PKCE, token storage, and refresh. The agent
+   must not manually build the authorization URL or collect API keys in chat.
+
+   The CLI opens the browser and listens on the local loopback callback. If the
+   browser cannot be opened automatically, ask the user to open the URL printed
+   by the CLI in their browser and complete the authorization. After OAuth login,
+   future tool calls reuse the saved access token and automatically refresh it
+   with the refresh token when needed.
+
+   After the user completes OAuth authorization, verify the setup by running
+   the credit usage summary tool once:
+
+   ```bash
+   FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool credit_usage_summary --args '{}' --output mcp
+   ```
+
+   If the current agent client cannot run the verification command directly,
+   ask the user to send one simple FastMoss question, such as "show my FastMoss
+   credit usage", so the agent can make a real tool call and confirm the
+   authorization works.
+
+4. Use API Key login only for compatibility or non-browser automation:
+
+   - Existing users who already configured an API key can keep using it; do not
+     force them through OAuth.
+   - Use API Key login for CI, headless servers, legacy scripts, or clients that
+     cannot support a browser-based OAuth flow.
    - In an interactive Agent client that can attach secret input to an active
      terminal, start `fastmoss login` in a PTY. When the CLI displays its API
      key prompt, trigger the client's native secret-entry action with one field
@@ -50,7 +78,8 @@ Use the `fastmoss` command to discover and call FastMoss tools.
      command arguments, pipe it through stdin, or include it in tool arguments,
      logs, plans, or replies.
    - If the current client cannot securely attach user input to the active CLI
-     terminal, ask the user to complete login in their own real terminal:
+     terminal and OAuth is not suitable, ask the user to complete API Key login
+     in their own real terminal:
 
    ```bash
    fastmoss login
@@ -59,6 +88,10 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    - `fastmoss login --api-key <value>` remains available only for compatibility
      with existing trusted automation. Do not recommend it for interactive login
      because command arguments may be observable by other processes or logs.
+
+5. After any first-time login path succeeds, run `credit_usage_summary` once to
+   confirm authentication, quota visibility, and MCP tool calling are working.
+   If verification fails because of missing auth, retry the login guidance above.
 
 ## Tool workflow
 

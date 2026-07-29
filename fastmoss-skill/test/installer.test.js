@@ -17,8 +17,12 @@ async function fixture() {
   const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), "fastmoss-skill-"));
   const source = path.join(root, "payload", "fastmoss-cli");
   await fs.promises.mkdir(path.join(source, "references"), { recursive: true });
+  await fs.promises.mkdir(path.join(source, "agents"), { recursive: true });
+  await fs.promises.mkdir(path.join(source, "data"), { recursive: true });
   await fs.promises.writeFile(path.join(source, "SKILL.md"), "# FastMoss\n");
   await fs.promises.writeFile(path.join(source, "references", "cli.md"), "# CLI\n");
+  await fs.promises.writeFile(path.join(source, "agents", "openai.yaml"), "name: fastmoss\n");
+  await fs.promises.writeFile(path.join(source, "data", "tools.json"), "{}\n");
   return { root, source };
 }
 
@@ -108,6 +112,25 @@ test("install replaces a legacy directory and writes ownership metadata", async 
       new RegExp(path.join(target, "SKILL.md").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
     );
     assert.match(output, /Agent action: Read/);
+  } finally {
+    await fs.promises.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("install excludes source-only agents and tool data", async () => {
+  const { root, source } = await fixture();
+  const skillRoot = path.join(root, "skills");
+  const target = path.join(skillRoot, "fastmoss-cli");
+  try {
+    await installSkill({
+      sourceSkillDir: source,
+      version: "1.2.3",
+      env: { FASTMOSS_SKILL_DIR: skillRoot },
+      uniqueId: () => "test",
+    });
+    assert.equal(fs.existsSync(path.join(target, "references", "cli.md")), true);
+    assert.equal(fs.existsSync(path.join(target, "agents")), false);
+    assert.equal(fs.existsSync(path.join(target, "data")), false);
   } finally {
     await fs.promises.rm(root, { recursive: true, force: true });
   }

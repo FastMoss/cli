@@ -20,7 +20,6 @@ Use `fastmoss tools --search <tool_name>` only when the installed CLI and accoun
 | Product Tools | [Product Tools](tools-product.md) | 12 | Product tools for product search, details, sales trends, creator mix, videos, SKUs, reviews, and ad investment analysis. |
 | Shop Tools | [Shop Tools](tools-shop.md) | 10 | Shop tools for shop search, profile checks, sales, products, creators, livestreams, short videos, and ad investment analysis. |
 | Market Insight Tools | [Market Insight Tools](tools-market.md) | 3 | Market insight tools for category size, growth, competition, rankings, opportunities, and creator sales matrix analysis. |
-| Auxiliary and Knowledge Base Tools | [Auxiliary and Knowledge Base Tools](tools-auxiliary-knowledge.md) | 10 | Auxiliary and knowledge base tools for category keyword matching, FastMoss documentation, detail-page URL rules, live/video analysis, and tools outside the main business prefixes. |
+| Auxiliary and Knowledge Base Tools | [Auxiliary and Knowledge Base Tools](tools-auxiliary-knowledge.md) | 11 | Auxiliary and knowledge base tools for category keyword matching, FastMoss documentation, detail-page URL rules, live/video analysis, quota checks, and tools outside the main business prefixes. |
 
 Read only the category file that matches the user's task before calling a tool.
-

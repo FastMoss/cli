@@ -1,3 +1,0 @@
-display_name: FastMoss CLI
-short_description: Use FastMoss command-line tools from an agent.
-default_prompt: Use FastMoss CLI to find the right FastMoss tool, call it with JSON arguments, and summarize the result for the user.

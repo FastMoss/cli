@@ -78,9 +78,22 @@ only when debugging raw RPC behavior.
 ## Error handling
 
 - If the CLI is missing, tell the user to run `npm install -g @fastmoss/cli`.
-- If auth is missing, use a PTY-backed `fastmoss login` with native secret input.
-  If the client cannot safely attach input to the active terminal, tell the user
-  to run `fastmoss login` in their own real terminal. Never pipe the API key.
+- If auth is missing, recommend `fastmoss login --oauth` for normal interactive
+  users and agent clients. The CLI owns browser launch, PKCE, callback handling,
+  token storage, and refresh; do not manually construct OAuth URLs.
+- For the test environment, recommend `fastmoss login --oauth --env test`.
+- If OAuth is not suitable because the environment is CI, headless, legacy, or
+  explicitly API-Key based, use a PTY-backed `fastmoss login` with native secret
+  input. If the client cannot safely attach input to the active terminal, tell
+  the user to run `fastmoss login` in their own real terminal. Never pipe the API
+  key.
+- If a saved API key exists, the CLI uses it before OAuth for compatibility. Ask
+  the user to run `fastmoss clear api-key` only when they want this local profile
+  to switch from API Key to OAuth.
+- After first-time login or OAuth authorization succeeds, run
+  `credit_usage_summary` with empty args once to verify authentication and quota
+  visibility. If the client cannot run commands directly, ask the user to send a
+  simple FastMoss question that lets the agent perform this verification call.
 - If the tool name is unknown, check `references/tools.md` and the matching category file, then try `fastmoss tools --json` when live discovery is available.
 - If arguments are rejected, inspect the tool's parameter table in the matching category file or run `fastmoss tools --search <tool_name>`.
 - Do not invent unavailable fields. Ask a focused follow-up question when required parameters are missing.

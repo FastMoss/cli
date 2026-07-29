@@ -6,6 +6,7 @@ const SKILL_NAME = "fastmoss-cli";
 const PACKAGE_NAME = "@fastmoss/skill";
 const INSTALL_MANIFEST = ".fastmoss-install.json";
 const AGENTS = new Set(["codex", "claude", "agents", "all"]);
+const EXCLUDED_PAYLOAD_DIRECTORIES = new Set(["agents", "data"]);
 
 function parseArgs(args = []) {
   const result = {
@@ -95,7 +96,8 @@ async function prepareInstall({
   await fsPromises.cp(sourceSkillDir, temporary, {
     recursive: true,
     filter(source) {
-      return path.basename(source) !== ".DS_Store";
+      const name = path.basename(source);
+      return name !== ".DS_Store" && !EXCLUDED_PAYLOAD_DIRECTORIES.has(name);
     },
   });
   if (!(await exists(path.join(temporary, "SKILL.md"), fsPromises))) {
@@ -276,6 +278,7 @@ async function uninstallSkill({
 }
 
 module.exports = {
+  EXCLUDED_PAYLOAD_DIRECTORIES,
   INSTALL_MANIFEST,
   PACKAGE_NAME,
   SKILL_NAME,
