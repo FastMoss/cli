@@ -120,3 +120,12 @@ If the analysis result needs FastMoss detail-page links, call `fastmoss_detail_u
 - `references/cli.md`: CLI command reference.
 - `references/tool-call.md`: safe calling patterns, quoting, output modes, and error handling.
 - `references/tools.md`: static FastMoss tool catalog index. Read the matching category file from this index instead of loading all tools at once.
+- `references/tools-advertising.md`: advertising tool details.
+- `references/tools-agency.md`: MCN agency tool details.
+- `references/tools-creator.md`: creator tool details.
+- `references/tools-product.md`: product tool details.
+- `references/tools-shop.md`: shop tool details.
+- `references/tools-market.md`: market insight tool details.
+- `references/tools-live.md`: live-session tool details.
+- `references/tools-video.md`: video tool details.
+- `references/tools-auxiliary-knowledge.md`: auxiliary and FastMoss knowledge-base tool details.

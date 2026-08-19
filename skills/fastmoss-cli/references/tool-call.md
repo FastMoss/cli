@@ -39,7 +39,9 @@ If a value contains a single quote, write the JSON to a temporary file or carefu
    - `tools-product.md` for `product_` tools.
    - `tools-shop.md` for `shop_` tools.
    - `tools-market.md` for `market_` tools.
-   - `tools-auxiliary-knowledge.md` for helper, link, document, category, live, video, and other tools.
+   - `tools-live.md` for `live_` tools.
+   - `tools-video.md` for `video_` tools.
+   - `tools-auxiliary-knowledge.md` for helper, link, document, category, and other tools.
 2. If the user is logged in and live metadata matters, run:
 
    ```bash

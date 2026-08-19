@@ -77,7 +77,17 @@ fastmoss tools --json
 fastmoss tools --search <tool_name>
 ```
 
-Use `tools --json` when live metadata is needed. Use `tools --search <tool_name>` to inspect one exact tool.
+Use `fastmoss tools` to print a compact, name-and-title list of the tools
+available to the current account. Use it to browse the catalog when the tool
+name is unknown.
+
+Use `fastmoss tools --json` to print the complete live tool-list response as
+JSON, including descriptions and input schemas. Use it when current metadata
+for several tools is needed.
+
+Use `fastmoss tools --search <tool_name>` to retrieve the complete JSON
+definition for one exact tool name (case-insensitive). Use it to confirm the
+input schema, required fields, and allowed values before calling that tool.
 
 ## Tool calls
 

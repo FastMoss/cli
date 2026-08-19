@@ -11,12 +11,16 @@ const templateRoot = path.join(__dirname, "..");
 const fixtureRoots = [];
 
 function hostAssetName() {
-  const key = `${os.platform()}:${os.arch()}`;
+  const system = spawnSync("uname", ["-s"], { encoding: "utf8" }).stdout.trim();
+  const machine = spawnSync("uname", ["-m"], { encoding: "utf8" }).stdout.trim();
+  const key = `${system}:${machine}`;
   const names = {
-    "darwin:x64": "fastmoss-darwin-amd64",
-    "darwin:arm64": "fastmoss-darwin-arm64",
-    "linux:x64": "fastmoss-linux-amd64",
-    "linux:arm64": "fastmoss-linux-arm64",
+    "Darwin:x86_64": "fastmoss-darwin-amd64",
+    "Darwin:arm64": "fastmoss-darwin-arm64",
+    "Linux:x86_64": "fastmoss-linux-amd64",
+    "Linux:amd64": "fastmoss-linux-amd64",
+    "Linux:aarch64": "fastmoss-linux-arm64",
+    "Linux:arm64": "fastmoss-linux-arm64",
   };
   if (!names[key]) throw new Error(`unsupported test host: ${key}`);
   return names[key];
