@@ -1,12 +1,22 @@
 # Auxiliary and Knowledge Base Tools
 
-> Auxiliary and knowledge base tools for category keyword matching, FastMoss documentation, detail-page URL rules, quota checks, and other tools outside the main business prefixes.
+> Auxiliary and knowledge base tools for category keyword matching, FastMoss documentation, detail-page URL rules, quota checks, and tools outside the main business prefixes.
+
+## Before calling a tool
+
+Run the exact schema lookup before constructing `--args`:
+
+```bash
+fastmoss tools --search <tool_name>
+```
+
+Use the returned required fields, nesting, types, and enum values. Do not infer them from another tool or move nested fields such as `filter.date_type` to the top level. If live lookup is unavailable, use this packaged reference as the fallback.
 
 ## Tool summary
 
 | Tool | Description |
 |---|---|
-| credit_usage_summary | Use after first-time login or authorization to verify auth and show the account's current FastMoss MCP credit usage summary. Takes no arguments. |
+| credit_usage_summary | Use after first-time login or authorization to verify auth and show the account's current FastMoss MCP credit usage s... |
 | fastmoss_detail_url_examples | Use when the AI needs FastMoss detail-page links. Takes no arguments and returns product, creator, shop, video, and l... |
 | search_category_by_words | Use when the user knows a product/category term but does not have the category_id yet. Returns matched TikTok product... |
 | search_fastmoss_documents | Use when the user asks about FastMoss rules, features, terms, or operations rather than real-time business data. Retu... |

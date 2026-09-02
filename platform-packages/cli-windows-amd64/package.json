@@ -1,6 +1,6 @@
 {
   "name": "@fastmoss/cli-windows-amd64",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "FastMoss CLI binary for win32/x64",
   "license": "UNLICENSED",
   "private": false,

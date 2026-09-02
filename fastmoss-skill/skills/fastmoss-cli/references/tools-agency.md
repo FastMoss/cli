@@ -2,6 +2,16 @@
 
 > Agency tools for MCN agency search, rankings, profiles, creator collaborations, promoted products, and collaborating-shop analysis.
 
+## Before calling a tool
+
+Run the exact schema lookup before constructing `--args`:
+
+```bash
+fastmoss tools --search <tool_name>
+```
+
+Use the returned required fields, nesting, types, and enum values. Do not infer them from another tool or move nested fields such as `filter.date_type` to the top level. If live lookup is unavailable, use this packaged reference as the fallback.
+
 ## Tool summary
 
 | Tool | Description |
@@ -23,7 +33,7 @@ Use when the user wants agency creator structure, follower tiers, and individual
 Example:
 
 ```bash
-fastmoss call --tool agency_creator_analysis --args '{"filter":{}}' --output mcp
+fastmoss call --tool agency_creator_analysis --args '{"filter":{"agency_id":"value"}}' --output mcp
 ```
 
 Parameters:
@@ -31,6 +41,8 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.agency_id | string | yes | Unique MCN agency ID; use agency_search first when only the agency name is known. |
+| filter.time_range_days | integer | no | Days: 7/14/28/90; recent=28; -1=cumulative. |
 | orderby | array | no | Sort options. |
 | page | integer | no | Page number. Default 1, max 10. |
 | pagesize | integer | no | Page size. Default 10, max 10. |
@@ -42,7 +54,7 @@ Use for agency product-category and price-band structure. Use agency_product_lis
 Example:
 
 ```bash
-fastmoss call --tool agency_product_analysis --args '{"filter":{}}' --output mcp
+fastmoss call --tool agency_product_analysis --args '{"filter":{"agency_id":"value"}}' --output mcp
 ```
 
 Parameters:
@@ -50,6 +62,8 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.agency_id | string | yes | Unique MCN agency ID; use agency_search first when only the agency name is known. |
+| filter.time_range_days | integer | no | Days: 7/14/28/90; recent=28; -1=cumulative. |
 
 ### agency_product_list
 
@@ -58,7 +72,7 @@ Use when the user wants individual products promoted through an agency. Supports
 Example:
 
 ```bash
-fastmoss call --tool agency_product_list --args '{"filter":{}}' --output mcp
+fastmoss call --tool agency_product_list --args '{"filter":{"agency_id":"value"}}' --output mcp
 ```
 
 Parameters:
@@ -66,6 +80,11 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.agency_id | string | yes | Unique MCN agency ID; use agency_search first when only the agency name is known. |
+| filter.maximum_price | number | no | Inclusive product-price upper bound; currency follows the agency market. |
+| filter.minimum_price | number | no | Inclusive product-price lower bound; currency follows the agency market. |
+| filter.product_category_id | integer | no | Product category ID. |
+| filter.time_range_days | integer | no | Days: 7/14/28/90; recent=28; -1=cumulative. |
 | orderby | array | no | Sort options. |
 | page | integer | no | Page number. Default 1, max 10. |
 | pagesize | integer | no | Page size. Default 10, max 10. |
@@ -77,7 +96,7 @@ Use when the user wants an agency profile, historical performance, and recent 7/
 Example:
 
 ```bash
-fastmoss call --tool agency_profile_overview --args '{"filter":{}}' --output mcp
+fastmoss call --tool agency_profile_overview --args '{"filter":{"agency_id":"value"}}' --output mcp
 ```
 
 Parameters:
@@ -85,6 +104,8 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.agency_id | string | yes | Unique MCN agency ID; use agency_search first when only the agency name is known. |
+| filter.time_range_days | integer | no | Days: 7/14/28/90; recent=28; -1=cumulative. |
 
 ### agency_rank_top
 
@@ -101,6 +122,9 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.date_type | string | no | Ranking period: day, week, or month; MCN agency rankings support only week/month. |
+| filter.date_value | string | no | Completed period only: yesterday YYYY-MM-DD, last week YYYY-ww or YYYY-Www, last month YYYY-MM; do not use the current period. |
+| filter.region | string | no | Country or region code, e.g. US, UK, ID. |
 | orderby | array | no | Sort options. |
 | page | integer | no | Page number. Default 1, max 10. |
 | pagesize | integer | no | Page size. Default 10, max 10. |
@@ -120,6 +144,8 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.region | string | no | Country or region code, e.g. US, UK, ID. |
+| filter.search_keyword | string | no | Agency-name keyword, maximum 120 characters. |
 | orderby | array | no | Sort options. |
 | page | integer | no | Page number. Default 1, max 10. |
 | pagesize | integer | no | Page size. Default 10, max 10. |
@@ -131,7 +157,7 @@ Use when the user wants agency collaborating-shop totals and individual shop per
 Example:
 
 ```bash
-fastmoss call --tool agency_shop_analysis --args '{"filter":{}}' --output mcp
+fastmoss call --tool agency_shop_analysis --args '{"filter":{"agency_id":"value"}}' --output mcp
 ```
 
 Parameters:
@@ -139,7 +165,9 @@ Parameters:
 | Name | Type | Required | Description |
 |---|---|---|---|
 | filter | object | yes | Filter parameters. |
+| filter.agency_id | string | yes | Unique MCN agency ID; use agency_search first when only the agency name is known. |
+| filter.product_category_id | integer | no | Product category ID. |
+| filter.time_range_days | integer | no | Days: 7/14/28/90; recent=28; -1=cumulative. |
 | orderby | array | no | Sort options. |
 | page | integer | no | Page number. Default 1, max 10. |
 | pagesize | integer | no | Page size. Default 10, max 10. |
-

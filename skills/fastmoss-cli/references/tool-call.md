@@ -42,12 +42,15 @@ If a value contains a single quote, write the JSON to a temporary file or carefu
    - `tools-live.md` for `live_` tools.
    - `tools-video.md` for `video_` tools.
    - `tools-auxiliary-knowledge.md` for helper, link, document, category, and other tools.
-2. If the user is logged in and live metadata matters, run:
+2. Before every call, run the exact tool lookup and construct `--args` from its returned schema:
 
    ```bash
-   fastmoss tools --json
    fastmoss tools --search <tool_name>
    ```
+
+   The lookup is authoritative for required fields, nesting, types, and enum values. For example, if it reports `filter.date_type` and `filter.date_value`, put both values inside `filter`. Use the packaged category file only when live lookup is unavailable.
+
+   Use `fastmoss tools --json` only when live metadata for several tools is needed.
 
 3. Match the user's intent to the most specific tool. Prefer specific product, creator, shop, ad, video, category, or ranking tools over broad search tools.
 

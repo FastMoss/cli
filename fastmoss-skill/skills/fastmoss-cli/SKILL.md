@@ -95,9 +95,23 @@ Use the `fastmoss` command to discover and call FastMoss tools.
 
 ## Tool workflow
 
-1. Read `references/tool-call.md` before invoking a tool.
-2. Read `references/tools.md` to choose the tool and understand its parameters.
-3. Every `fastmoss call` MUST include agent client metadata. Prefer environment variables when making one or more calls in the same shell session:
+1. Read `references/tools.md` to choose the most specific tool and load only its matching category file. The packaged catalog is for tool selection and offline fallback; it is not the authority for the current account's input schema.
+2. **Before every `fastmoss call`, run the exact tool lookup and use its returned schema to construct `--args`:**
+
+   ```bash
+   fastmoss tools --search <tool_name>
+   ```
+
+   This lookup is mandatory whenever it is available. It gives the current tool's required fields, nesting, types, and enum values. Do not infer parameters from a similar tool or invent fields. If live lookup is unavailable, use the packaged category file as the fallback and state the limitation if the call is rejected.
+3. Read `references/tool-call.md` for shell quoting, output modes, and error handling.
+4. Put fields at the nesting shown by the schema. For example, when the schema requires `filter.date_type` and `filter.date_value`, pass them inside `filter`, not at the top level:
+
+   ```json
+   {"filter":{"date_type":"week","date_value":"2025-W01","region":"US"},"page":1,"pagesize":10}
+   ```
+
+   For ranking tools, `date_type` selects the period and `date_value` is required for that completed period: `day` uses the prior day as `YYYY-MM-DD`; `week` uses the last completed ISO week as `YYYY-Www`; `month` uses the last completed calendar month as `YYYY-MM`. Never pass an in-progress day, week, or month. The exact tool schema remains authoritative because some rankings support only a subset of these values.
+5. Every `fastmoss call` MUST include agent client metadata. Prefer environment variables when making one or more calls in the same shell session:
 
    ```bash
    FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool <tool_name> --args '<json>' --output mcp
@@ -112,6 +126,31 @@ Use the `fastmoss` command to discover and call FastMoss tools.
    Use the actual client name and version when available. Do not invent a version number; if the runtime does not expose a version, use the client name and omit the version only if the CLI allows it.
 
 Prefer `--output mcp` when an LLM or agent will read and reason over the tool response. Use `--output data` when the user needs a concise end-user payload. Use `--output rpc` only when debugging raw RPC responses.
+
+### Common parameter patterns
+
+All current tools have a flattened parameter table and a generated JSON example in the matching category reference. Apply these rules before calling any of them:
+
+| Parameter pattern | How to pass it |
+|---|---|
+| Nested filters | Keep the schema path in the JSON: `filter.uid`, `filter.region`, or `filter.date_type` means `{"filter":{...}}`, not a top-level field. |
+| Object identity | Use the exact ID name returned by a search or detail tool, such as `uid`, `product_id`, `shop_id`, `video_id`, or `live_id`; do not substitute a handle or display name. |
+| Categories | Resolve a named category with `search_category_by_words` before passing `category_id`, `product_category_id`, `creator_category_id`, or `category_path`. |
+| Time ranges | Use only the schema's time style: `time_range_days`, `start_date`/`end_date` (both `YYYY-MM-DD`), or ranking `date_type`/`date_value`. Do not mix styles unless the schema exposes both. |
+| Rankings | Use a completed period only: `day` → prior `YYYY-MM-DD`; `week` → last completed `YYYY-Www`; `month` → last completed `YYYY-MM`. Confirm supported periods with the exact tool lookup. |
+| Pagination and sorting | Pass `page` and `pagesize` at the top level when the schema lists them. Their maximum is 10. `orderby` is an array; use only fields and sort shapes returned by the schema. |
+| Ranges and enums | Preserve object shapes such as `{"min": number, "max": number}` and use only the enum values returned by `tools --search`. |
+
+### Leaderboard example
+
+The same time-field structure applies to creator, product, shop, market, and agency leaderboards whenever their exact schema includes it. For a weekly ecommerce-creator leaderboard, verify the live schema first, then pass the required time fields inside `filter`:
+
+```bash
+fastmoss tools --search creator_rank_top_ecommerce
+FASTMOSS_CLIENT_NAME="<client-name>" FASTMOSS_CLIENT_VERSION="<client-version>" fastmoss call --tool creator_rank_top_ecommerce --args '{"filter":{"date_type":"week","date_value":"2025-W01","region":"US"},"page":1,"pagesize":10}' --output mcp
+```
+
+`2025-W01` is an example of the required ISO-week format; replace it with the latest completed week or the period the user requested. The generated references provide the exact fields for every current leaderboard and non-leaderboard tool.
 
 If the analysis result needs FastMoss detail-page links, call `fastmoss_detail_url_examples` first to get the link assembly rules, then build links from the returned examples and IDs in the analysis result.
 
